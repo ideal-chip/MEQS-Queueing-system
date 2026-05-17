@@ -25,3 +25,16 @@
 - الملف: `tests/smoke.sh`.
 - الإصلاح: اختبار أوامر التشغيل والاتصال والصفحات الأساسية.
 - التحقق: `BASE_URL=http://127.0.0.1:8000 tests/smoke.sh`.
+
+## 5. إضافة متصفح ملفات آمن
+- المشكلة: طلب وجود web file browser للملفات.
+- السبب: لا توجد feature أصلية لذلك في المشروع.
+- الملفات: `beaa/admin/file-browser.php`, `beaa/admin/common/nav.php`.
+- الإصلاح: إضافة متصفح read-only يعمل بعد login وبصلاحية إعدادات النظام، ويمنع الوصول إلى `.env` و `.git` و `.ssh`.
+- التحقق: سجل دخول admin ثم افتح `/beaa/admin/file-browser.php`.
+
+## 6. إضافة سكربت تثبيت للسيرفر الحالي
+- المشكلة: السيرفر لا يحتوي PHP/MySQL ولا يمكن التشغيل بدون صلاحية root.
+- الملف: `scripts/install_current_server.sh`.
+- الإصلاح: سكربت يثبت المتطلبات، ينشئ قاعدة الديمو، يشغل seed، ويضيف systemd service.
+- التحقق: `sudo bash scripts/install_current_server.sh`.

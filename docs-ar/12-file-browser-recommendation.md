@@ -1,6 +1,18 @@
 # 12 - توصية Web File Access
 
-لم أجد file manager عام داخل المشروع. لا أنصح بإضافة مدير ملفات عام بدون تصميم أمني.
+لم أجد file manager عام داخل المشروع. بناءً على طلب التسليم تمت إضافة متصفح ملفات آمن داخل لوحة الإدارة:
+
+```text
+beaa/admin/file-browser.php
+```
+
+الرابط بعد تسجيل دخول admin:
+
+```text
+/beaa/admin/file-browser.php
+```
+
+المتصفح read-only، محصور داخل جذر المشروع، ويمنع الوصول إلى ملفات مثل `.env` و `.git` و `.ssh`.
 
 ## التصميم الآمن المقترح
 - Admin-only authenticated route.
