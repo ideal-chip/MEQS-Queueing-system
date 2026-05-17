@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $filesPath = "../files/";
 
 $query = "SELECT * FROM audios";

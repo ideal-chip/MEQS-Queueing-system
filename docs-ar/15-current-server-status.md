@@ -33,7 +33,37 @@ Permission denied /var/lib/apt/lists/lock
 sudo: a password is required
 ```
 
-## المطلوب لتشغيل المشروع فعلياً
+## ما تم عمله بدون sudo
+تم تنزيل runtime محلي داخل المشروع:
+- `.runtime/static-php/`: PHP static build.
+- `.runtime/mariadb/`: MariaDB portable server.
+- `.runtime/mysql-data/`: بيانات قاعدة الديمو.
+
+التطبيق يعمل الآن على:
+
+```text
+http://127.0.0.1:8000
+```
+
+قاعدة البيانات تعمل على:
+
+```text
+127.0.0.1:3307
+```
+
+## إعادة التشغيل
+```bash
+cd /home/idealchip_server/meqs
+bash scripts/start_local_runtime.sh
+```
+
+## الإيقاف
+```bash
+cd /home/idealchip_server/meqs
+bash scripts/stop_local_runtime.sh
+```
+
+## خيار التثبيت النظامي عند توفر sudo
 تشغيل هذا الأمر من مستخدم لديه sudo:
 
 ```bash

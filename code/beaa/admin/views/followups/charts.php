@@ -1,4 +1,3 @@
-
 <?php
 foreach ($categoriesList as $cat) {
     $catId = $cat['cat'];

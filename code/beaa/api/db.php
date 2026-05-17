@@ -33,13 +33,14 @@ function envValue($key, $default = '') {
 //-------------------------------------< global mysqli method >----------
 
 define('DB_SERVER', envValue('DB_HOST', 'localhost'));
+define('DB_PORT', (int) envValue('DB_PORT', '3306'));
 define('DB_USERNAME', envValue('DB_USER', 'project_demo_user'));
 define('DB_PASSWORD', envValue('DB_PASSWORD', 'ProjectDemo@12345'));
 define('DB_NAME', envValue('DB_NAME', 'project_demo_db'));
 
 /* Attempt to connect to MySQL database */
 
-$mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+$mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
 // Check connection
 if($mysqli === false){
     die("ERROR: Could not connect. " . $mysqli->connect_error);
@@ -55,7 +56,7 @@ $lastSQLError = "";
 
 function getRow($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastSQLError;
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         if ($qr = $conn->query($query)) {
@@ -72,7 +73,7 @@ function getRow($query) {
 
 function getValue($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastSQLError;
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         if ($qr = $conn->query($query)) {
@@ -90,7 +91,7 @@ function getValue($query) {
 function getColumn($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastSQLError;
     $retArray = Array();
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         if ($qr = $conn->query($query)) {
@@ -107,7 +108,7 @@ function getColumn($query) {
 
 function executeQuery($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastID, $lastSQLError;
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         $result = $conn->query($query);
@@ -121,7 +122,7 @@ function executeQuery($query) {
 
 function executeMultiQuery($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastID, $lastSQLError;
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         $result = $conn->multi_query($query);
@@ -134,7 +135,7 @@ function executeMultiQuery($query) {
 
 function getArray($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastID, $lastSQLError;
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     
     $resultArray = array();
     if (!$conn->errno) {
@@ -152,7 +153,7 @@ function getArray($query) {
 
 function getArrayAssoc($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastID, $lastSQLError;
-    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     
     $resultArray = array();
     if (!$conn->errno) {

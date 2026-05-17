@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (!isset($counterID)) {
     header("Location: ./");
     exit(1);

@@ -1,24 +1,29 @@
 # 00 - ملخص التسليم التنفيذي
 
 ## حالة التشغيل
-لم يعمل المشروع على هذا السيرفر حتى الآن لأن السيرفر لا يحتوي حزم التشغيل الأساسية:
-- لا يوجد `php`.
-- لا يوجد `mysql` أو `mariadb`.
-- لا يوجد `apache2` أو `nginx`.
-- لا يوجد `docker`.
-- المستخدم الحالي `idealchip_server` لا يملك sudo بدون كلمة مرور.
+تم تشغيل المشروع فعلياً على هذا السيرفر بدون صلاحية root عبر runtime محلي داخل `.runtime/`:
+- PHP 8.4.21 static مع `mysqli/mysqlnd`.
+- MariaDB 11.4.10 محلي على `127.0.0.1:3307`.
+- PHP built-in server على `127.0.0.1:8000`.
 
-هذا يعني أن المشروع لا يستطيع العمل حالياً حتى لو كان الكود صحيحاً. تم تجهيز سكربت تثبيت كامل:
-
-```bash
-sudo bash scripts/install_current_server.sh
-```
-
-بعد تشغيله بصلاحية root، يفترض أن يعمل المشروع على:
+الروابط الحالية:
 
 ```text
 http://127.0.0.1:8000/beaa/admin/account/login.php
 http://127.0.0.1:8000/beaa/counter/
+http://127.0.0.1:8000/beaa/admin/file-browser.php
+```
+
+لإعادة التشغيل:
+
+```bash
+bash scripts/start_local_runtime.sh
+```
+
+للإيقاف:
+
+```bash
+bash scripts/stop_local_runtime.sh
 ```
 
 ## ما تم إنجازه
@@ -54,6 +59,15 @@ http://127.0.0.1:8000/beaa/counter/
 ```bash
 cd /home/idealchip_server/meqs
 sudo bash scripts/install_current_server.sh
+BASE_URL=http://127.0.0.1:8000 tests/smoke.sh
+```
+
+## أمر الاختبار الحالي بدون sudo
+```bash
+PHP_CMD=/home/idealchip_server/meqs/.runtime/static-php/buildroot/bin/php \
+MYSQL_CMD=/home/idealchip_server/meqs/.runtime/mariadb/bin/mariadb \
+DB_HOST=127.0.0.1 DB_PORT=3307 \
+DB_USER=project_demo_user DB_PASSWORD=ProjectDemo@12345 DB_NAME=project_demo_db \
 BASE_URL=http://127.0.0.1:8000 tests/smoke.sh
 ```
 
