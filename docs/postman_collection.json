@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "MEQS iDEAL-Q Handover Demo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Admin Login Page",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/beaa/admin/account/login.php"
+      }
+    },
+    {
+      "name": "Counter Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {"key": "type", "value": "11"},
+            {"key": "username", "value": "operator.demo@example.com"},
+            {"key": "password", "value": "OperatorDemo@123"},
+            {"key": "counter", "value": "1"},
+            {"key": "autologin", "value": "false"}
+          ]
+        },
+        "url": "{{baseUrl}}/beaa/api/counter/index.php"
+      }
+    },
+    {
+      "name": "Kiosk Config",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/beaa/api/kiosk/get.php?id=1"
+      }
+    },
+    {
+      "name": "Issue Ticket",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/beaa/api/kiosk/set.php?id=1&cat=1&lang=ar"
+      }
+    },
+    {
+      "name": "Big Display Latest Waiting",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/beaa/api/bigdisplay/latestwating.php?id=1&max=5"
+      }
+    },
+    {
+      "name": "Display Data",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/beaa/api/display/index.php?id=1"
+      }
+    }
+  ]
+}
