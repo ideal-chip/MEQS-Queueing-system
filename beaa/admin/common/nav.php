@@ -65,6 +65,8 @@ $parent = "/admin/";
                                 <li class = "divider"></li>
                                 <li><?php createLink(getTextValue('displays', $lang), $parent . "displays") ?></li>
                                 <li><?php createLink(getTextValue('zones', $lang), $parent . "zones") ?></li>
+                                <li class = "divider"></li>
+                                <li><?php createLink('File Browser', $parent . "file-browser") ?></li>
                             </ul>
                         </li>
                         <?php
