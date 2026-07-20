@@ -1,5 +1,33 @@
 // iDEAL-Q Common JavaScript Functions
 
+// Copy a counter-feedback link to the clipboard, with a brief button flash
+// as feedback (used on admin/counters.php and its edit form).
+function copyFeedbackLink(url, btnEl) {
+    var done = function () {
+        if (!btnEl) return;
+        var original = btnEl.innerHTML;
+        btnEl.innerHTML = '<i class="glyphicon glyphicon-ok"></i>';
+        setTimeout(function () { btnEl.innerHTML = original; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function () { fallbackCopy(url, done); });
+    } else {
+        fallbackCopy(url, done);
+    }
+}
+
+function fallbackCopy(text, cb) {
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    tmp.style.position = 'fixed';
+    tmp.style.opacity = '0';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(tmp);
+    if (cb) cb();
+}
+
 // Get current date
 function getDate() {
     var today = new Date();

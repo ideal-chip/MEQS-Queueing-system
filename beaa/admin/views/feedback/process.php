@@ -30,6 +30,52 @@ if ($dateStart > $dateEnd) {
     $dateStart = $temp;
 }
 
+//========================================================================================| scope / counter filter
+// scope: all (default) | global | counter. counter_id: only applied when scope=counter.
+$scope = getRequestVal('scope', 'all');
+if (!in_array($scope, array('all', 'global', 'counter'), true)) {
+    $scope = 'all';
+}
+$filterCounterId = (int) getRequestVal('counter_id', 0);
+
+$scopeWhere = "DATE(feedback_date) BETWEEN '$dateStart' AND '$dateEnd'";
+if ($scope === 'global') {
+    $scopeWhere .= " AND feedback_scope = 'global'";
+} elseif ($scope === 'counter') {
+    $scopeWhere .= " AND feedback_scope = 'counter'";
+    if ($filterCounterId > 0) {
+        $scopeWhere .= " AND counter_id = $filterCounterId";
+    }
+}
+
+$countersList = getArrayAssoc("SELECT counter_id, counter_name FROM counters ORDER BY counter_name;");
+
+// Global vs counter split (independent of the scope filter above, always
+// shown so the two are never silently averaged together unless "All" is picked).
+$scopeCounts = getArrayAssoc("SELECT feedback_scope, COUNT(*) AS total
+    FROM feedback WHERE DATE(feedback_date) BETWEEN '$dateStart' AND '$dateEnd' GROUP BY feedback_scope;");
+$globalCount = 0;
+$counterCount = 0;
+foreach ($scopeCounts as $row) {
+    if ($row['feedback_scope'] === 'global') {
+        $globalCount = (int) $row['total'];
+    } else {
+        $counterCount = (int) $row['total'];
+    }
+}
+
+// Per-counter comparison table (uses the snapshot name, so it still reports
+// correctly for counters that have since been deleted).
+$counterComparison = getArrayAssoc("SELECT
+        counter_id, counter_name_snapshot,
+        COUNT(*) AS total,
+        ROUND(AVG(feedback_score), 2) AS avg_score,
+        MAX(feedback_date) AS last_feedback
+    FROM feedback
+    WHERE feedback_scope = 'counter' AND DATE(feedback_date) BETWEEN '$dateStart' AND '$dateEnd'
+    GROUP BY counter_id, counter_name_snapshot
+    ORDER BY avg_score DESC;");
+
 //========================================================================================| DB init data [display form data]
 
 $fbQuestions = getArrayAssoc("SELECT text_key, text_value FROM texts WHERE text_key IN ('fb0','fb1','fb2','fb3','fb4') AND text_language='$lang' ORDER BY text_key;");
@@ -41,9 +87,9 @@ $finalTotalCount = 0;
 
 for ($index = 1; $index <= 5; $index++) {
     $fb = "fb" . $index;
-    
-    $ratingQry = "SELECT $fb, COUNT($fb) AS 'total' 
-        FROM feedback WHERE DATE(feedback_date) between '$dateStart' AND '$dateEnd' GROUP BY $fb;";
+
+    $ratingQry = "SELECT $fb, COUNT($fb) AS 'total'
+        FROM feedback WHERE $scopeWhere GROUP BY $fb;";
     $rateTabel = getArrayAssoc($ratingQry);
     
     $values = [0, 0, 0, 0, 0];

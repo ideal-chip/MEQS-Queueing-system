@@ -29,6 +29,25 @@ if ($uri !== '/' && (is_file($fsPath) || is_dir($fsPath))) {
     return false;
 }
 
+// Per-counter feedback pages: /beaa/feedback/{counter_id}/ — dynamic route,
+// no per-counter file on disk. Canonical form has a trailing slash; the
+// no-slash form redirects to it (mirrors the directory-index rule above).
+if (preg_match('#^/beaa/feedback/(\d+)$#', $uri, $m)) {
+    $qs = $_SERVER['QUERY_STRING'] ?? '';
+    header('Location: ' . $uri . '/' . ($qs !== '' ? '?' . $qs : ''), true, 302);
+    exit;
+}
+if (preg_match('#^/beaa/feedback/(\d+)/$#', $uri, $m)) {
+    $_GET['counter_id'] = $m[1];
+    // The built-in server normally chdir()s into a served script's own
+    // directory (so its "../xyz.php" relative includes resolve); that only
+    // happens for files it serves directly, not ones we require() here
+    // ourselves, so it has to be done explicitly.
+    chdir($docroot . '/beaa/feedback');
+    require $docroot . '/beaa/feedback/index.php';
+    exit;
+}
+
 // Legacy short paths that actually live under /beaa/ (mirrors .htaccess +
 // beaa/router.php's Router::autoFix() path list).
 $shortcuts = ['admin', 'api', 'counter', 'files', 'css', 'js', 'display', 'bigdisplay', 'feedback', 'audio', 'bulkcall'];

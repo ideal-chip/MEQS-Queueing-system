@@ -105,3 +105,18 @@ if (count($errorList) > 0) {
         </tr>
     </table>
 </form>
+
+<?php if ($editmode && $id > 0) {
+    $fbUrl = BASE_URL . '/feedback/' . $id . '/';
+    ?>
+<div class="s-70 well well-sm marg-v-20">
+    <div class="font-bold marg-5">Counter Feedback Link</div>
+    <div class="input-group s-100">
+        <input type="text" class="form-control" readonly value="<?php echo htmlspecialchars($fbUrl) ?>" onclick="this.select();">
+        <span class="input-group-btn">
+            <a href="<?php echo $fbUrl ?>" target="_blank" class="btn btn-info">Open</a>
+            <button type="button" class="btn btn-default" onclick="copyFeedbackLink('<?php echo $fbUrl ?>', this)">Copy</button>
+        </span>
+    </div>
+</div>
+<?php } ?>
