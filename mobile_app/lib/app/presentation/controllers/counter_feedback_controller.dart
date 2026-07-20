@@ -7,7 +7,7 @@ import 'feedback_form_status.dart';
 import 'settings_controller.dart';
 
 /// Drives the per-counter feedback screen (the mobile equivalent of
-/// http://<host>:8000/beaa/feedback/{counter_id}/). The counter id is
+/// `http://host:8000/beaa/feedback/{counter_id}/`). The counter id is
 /// passed in as a constructor argument when the screen is pushed from the
 /// Counter Feedback list, so this controller is created fresh per counter
 /// rather than shared/reused.
