@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS categories (
   category_parent INT DEFAULT NULL,
   category_zone INT NOT NULL,
   category_enabled TINYINT NOT NULL DEFAULT 1,
+  category_data TEXT DEFAULT NULL,
   KEY idx_category_zone (category_zone),
   CONSTRAINT fk_categories_zone FOREIGN KEY (category_zone) REFERENCES zones(zone_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -262,9 +263,10 @@ CREATE TABLE IF NOT EXISTS transfers (
   transfer_event INT NOT NULL,
   transfer_clerk INT NOT NULL,
   transfer_counter INT NOT NULL,
-  transfer_cat INT NOT NULL,
+  transfer_cat INT DEFAULT NULL,
   transfer_new_counter INT DEFAULT 0,
   transfer_new_category INT DEFAULT 0,
+  transfer_zone INT DEFAULT NULL,
   transfer_done TINYINT NOT NULL DEFAULT 0,
   transfer_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_transfer_event (transfer_event),
@@ -274,10 +276,13 @@ CREATE TABLE IF NOT EXISTS transfers (
 CREATE TABLE IF NOT EXISTS followups (
   followup_id INT AUTO_INCREMENT PRIMARY KEY,
   serial_no VARCHAR(80) NOT NULL,
+  day_order_no INT DEFAULT NULL,
+  event_id INT DEFAULT NULL,
   client_name VARCHAR(120) NOT NULL,
   mobile_number VARCHAR(40) DEFAULT '',
   category_id INT NOT NULL,
   subcategory_id INT DEFAULT NULL,
+  extension_no VARCHAR(30) DEFAULT NULL,
   clerk_id INT DEFAULT NULL,
   notes TEXT,
   date_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -294,6 +299,8 @@ CREATE TABLE IF NOT EXISTS feedback (
   fb2 INT DEFAULT NULL,
   fb3 INT DEFAULT NULL,
   fb4 INT DEFAULT NULL,
+  fb5 INT DEFAULT NULL,
+  feedback_score DECIMAL(4,2) DEFAULT NULL,
   feedback_note TEXT,
   feedback_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

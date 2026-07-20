@@ -1,0 +1,23 @@
+/* iDEAL-Q — admin reports (feedback / followups charts) */
+
+#charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#charts .col-1 {
+    width: 18%;
+    min-width: 160px;
+    text-align: center;
+}
+
+#chart-data {
+    margin-top: 20px;
+}
+
+.well-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

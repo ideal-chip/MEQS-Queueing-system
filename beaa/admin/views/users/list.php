@@ -26,7 +26,7 @@
         <tr>
             <td >
                 <img style='width:16px;height:16px;cursor:pointer' 
-                     src='<?php echo $filesPath . 'delete.png' ?>' 
+                     src='<?php echo $filesPath . '/delete.png' ?>' 
                      onclick='if (confirm("<?php echo getTextValue("deleteQuestion", $lang) . getTextValue("questionMark", $lang) ?>"))
                                      location.replace("<?php echo "?mode=delete&id=" . $row['user_id'] ?>")'>
             </td>
@@ -38,7 +38,7 @@
             <td ><?php echo $row['user_desc'] ?></td>
             <td ><?php echo $row['user_phone'] ?></td>
             <?php for ($i = 0; $i < 8; $i++) { ?>
-                <td ><img src='<?php echo $filesPath . (($row['user_privileges'] & (2 ** $i)) ? "check.png" : "uncheck.png"); ?>'></td>
+                <td ><img src='<?php echo $filesPath . (($row["user_privileges"] & (2 ** $i)) ? "/check.png" : "/uncheck.png"); ?>'></td>
             <?php }; ?>
         </tr>
         <?php
@@ -47,5 +47,5 @@
 </table>
 <br>
 <a href='?mode=add'>
-    <img src='<?php echo $filesPath . "add.png" ?>' title='<?php echo getTextValue("add", $lang) ?> '>
+    <img src='<?php echo $filesPath . "/add.png" ?>' title='<?php echo getTextValue("add", $lang) ?> '>
 </a>

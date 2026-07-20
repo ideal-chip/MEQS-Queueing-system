@@ -2,6 +2,7 @@
 //error_reporting(0);
 session_start();
 //-------------------------------------------------------------< includes >---
+require_once("../router.php"); // Auto-fix URLs
 require_once("../language.php");
 
 //-----------------------------------------< lang >-------
@@ -19,7 +20,7 @@ if (isset($_GET['language'])) {
 }
 //-------------------------------------------------------------< main vars >---
 
-$filesPath = "../files/";
+$filesPath = defined('FILES_PATH') ? FILES_PATH : "../files";
 $dir = trim(getTextValue('dir', $lang));
 
 if (!isset($_SESSION['username'])) {

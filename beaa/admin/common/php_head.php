@@ -3,6 +3,7 @@ error_reporting(0);
 session_start();
 
 //-------------------------------------------------------------< includes >---
+require_once("../router.php"); // Auto-fix URLs
 require_once("../language.php");
 
 //-------------------------------------------------------------< user info >---
@@ -23,7 +24,10 @@ if (isset($_GET['language'])) {
 }
 //-------------------------------------------------------------< main vars >---
 
-$filesPath = "../files/";
+// Use dynamic paths from config.php
+$filesPath = defined('FILES_PATH') ? FILES_PATH : "../files";
+$cssPath = defined('CSS_PATH') ? CSS_PATH : '../css';
+$jsPath = defined('JS_PATH') ? JS_PATH : '../js';
 
 $dir = trim(getTextValue('dir', $lang));
 //-------------------------------------------------------------< auth checks >---

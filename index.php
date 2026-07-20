@@ -12,12 +12,12 @@
     <body>
         <div class="container body-content">
             <div class="text-center">
-                <img src="files/logos/systemlogo.png" alt="">
+                <img src="files/logos/systemlogo.svg" alt="iDEAL-Q" style="max-width:300px;height:auto;">
             </div>
             <div class="row con">
                 <div class="text-center">
-                    <a href="counter?id=1" class="btn btn-primary btn-prima">Clerk</a>
-                    <a href="admin/index.php" class="btn btn-primary btn-prima">Admin</a>
+                    <a href="beaa/counter?id=1" class="btn btn-primary btn-prima">Clerk</a>
+                    <a href="beaa/admin/index.php" class="btn btn-primary btn-prima">Admin</a>
                 </div>
             </div>
 

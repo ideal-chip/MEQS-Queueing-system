@@ -38,6 +38,17 @@ define('DB_USERNAME', envValue('DB_USER', 'project_demo_user'));
 define('DB_PASSWORD', envValue('DB_PASSWORD', 'ProjectDemo@12345'));
 define('DB_NAME', envValue('DB_NAME', 'project_demo_db'));
 
+/*
+ * PHP 8.1 changed the default mysqli error reporting mode to
+ * MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT, which throws a
+ * mysqli_sql_exception on any failed query/connection. This code base was
+ * written for the classic (PHP 7) behaviour where a failing query returns
+ * false/null and the error text is read from $conn->error. Restore that mode
+ * so an isolated bad query degrades gracefully instead of aborting the whole
+ * page. (See getRow()/getValue()/executeQuery() below, which all rely on it.)
+ */
+mysqli_report(MYSQLI_REPORT_OFF);
+
 /* Attempt to connect to MySQL database */
 
 $mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
@@ -78,7 +89,7 @@ function getValue($query) {
         $conn->set_charset("utf8");
         if ($qr = $conn->query($query)) {
             $row = $qr->fetch_array(MYSQLI_NUM);
-            $result = $row[0];
+            $result = $row ? $row[0] : null;
         } else {
             $result = null;
             $lastSQLError = $conn->error;

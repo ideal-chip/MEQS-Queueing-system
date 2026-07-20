@@ -1,0 +1,195 @@
+═══════════════════════════════════════════════════════════════
+   iDEAL-Q Queue Management System - Network Access
+═══════════════════════════════════════════════════════════════
+
+Server IP: 192.168.1.72
+Port: 8000
+
+═══════════════════════════════════════════════════════════════
+   ALL PORTALS & CREDENTIALS
+═══════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│ 1. ADMIN PORTAL (Full Access)                               │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/admin/account/login.php
+   
+   Username: admin.demo@example.com
+   Password: AdminDemo@123
+   
+   Features:
+   • Manage Users, Clerks, Zones
+   • Manage Categories, Counters, Displays
+   • View Reports, Statistics, Flow
+   • File Browser, Settings, Languages
+   • Full System Control
+
+┌─────────────────────────────────────────────────────────────┐
+│ 2. COUNTER PORTAL (Operator)                                │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/counter/
+   
+   Username: operator.demo@example.com
+   Password: OperatorDemo@123
+   Counter: Select Counter 1 or Counter 2
+   
+   Features:
+   • Call Next Ticket
+   • Finish Service
+   • Transfer Ticket
+   • Recall Ticket
+   • Add Follow-up
+
+┌─────────────────────────────────────────────────────────────┐
+│ 3. VIEWER PORTAL (Read-Only)                                │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/admin/account/login.php
+   
+   Username: viewer.demo@example.com
+   Password: ViewerDemo@123
+   
+   Features:
+   • View Reports Only
+   • Search Records
+   • View Statistics
+   • No Edit/Delete Rights
+
+┌─────────────────────────────────────────────────────────────┐
+│ 4. BIG DISPLAY (Public - No Login)                          │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/bigdisplay/?id=1
+   
+   Description: Large display screen for customer halls
+   Shows: Last called tickets with counter numbers
+   Auto-refresh: Every second
+
+┌─────────────────────────────────────────────────────────────┐
+│ 5. REGULAR DISPLAY (Public - No Login)                      │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/display/?id=1
+   
+   Description: Small display at counter
+   Shows: Current ticket being served
+
+┌─────────────────────────────────────────────────────────────┐
+│ 6. KIOSK API (Public - No Login)                            │
+└─────────────────────────────────────────────────────────────┘
+   Get Settings:
+   http://192.168.1.72:8000/beaa/api/kiosk/get.php?id=1
+   
+   Issue Ticket:
+   http://192.168.1.72:8000/beaa/api/kiosk/set.php?id=1&cat=1&lang=ar
+   
+   Issue Multiple:
+   http://192.168.1.72:8000/beaa/api/kiosk/set-bulk.php?id=1&cat=1&qty=3&lang=ar
+   
+   Last Printed:
+   http://192.168.1.72:8000/beaa/api/kiosk/lastprinted.php?id=1
+
+┌─────────────────────────────────────────────────────────────┐
+│ 7. FEEDBACK PORTAL (Public - No Login)                      │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/feedback/
+   
+   Description: Customer satisfaction survey
+   Features: 5-star rating + comments
+
+┌─────────────────────────────────────────────────────────────┐
+│ 8. FILE BROWSER (Admin Only)                                │
+└─────────────────────────────────────────────────────────────┘
+   URL: http://192.168.1.72:8000/beaa/admin/file-browser.php
+   
+   Requirements: Login as admin first
+   Features: Browse files, download, read-only
+
+═══════════════════════════════════════════════════════════════
+   DEMO DATA AVAILABLE
+═══════════════════════════════════════════════════════════════
+
+Categories:
+• CAT001 - خدمة العملاء (Customer Service)
+• CAT002 - المعاملات المالية (Payments)
+
+Counters:
+• Counter 1 - Serves all categories
+• Counter 2 - Serves customer service only
+
+Devices:
+• Kiosk 1 (Main Kiosk)
+• Display 1 (Main Counter Display)
+• Big Display 1 (Main Hall Display)
+
+Sample Tickets:
+• 3 demo tickets already created
+• 1 follow-up record
+• 1 feedback record
+
+═══════════════════════════════════════════════════════════════
+   QUICK TEST COMMANDS
+═══════════════════════════════════════════════════════════════
+
+Test Admin Login:
+curl -I http://192.168.1.72:8000/beaa/admin/account/login.php
+
+Test Counter Portal:
+curl -I http://192.168.1.72:8000/beaa/counter/
+
+Test Big Display:
+curl -I http://192.168.1.72:8000/beaa/bigdisplay/?id=1
+
+Issue Test Ticket:
+curl "http://192.168.1.72:8000/beaa/api/kiosk/set.php?id=1&cat=1&lang=ar"
+
+═══════════════════════════════════════════════════════════════
+   SERVER CONTROL
+═══════════════════════════════════════════════════════════════
+
+Start Server:
+cd /home/idealchip_server/meqs
+bash scripts/start_local_runtime.sh
+
+Stop Server:
+cd /home/idealchip_server/meqs
+bash scripts/stop_local_runtime.sh
+
+Check Status:
+ps aux | grep -E 'php|mariadb' | grep -v grep
+netstat -tuln | grep :8000
+
+═══════════════════════════════════════════════════════════════
+   DOCUMENTATION
+═══════════════════════════════════════════════════════════════
+
+Quick Start:
+/home/idealchip_server/meqs/QUICK-START.md
+
+Full Network Guide (Arabic):
+/home/idealchip_server/meqs/docs-ar/NETWORK-ACCESS-GUIDE.md
+
+Complete Handover (Arabic):
+/home/idealchip_server/meqs/docs-ar/00-تقرير-التسليم-النهائي-الشامل.md
+
+All Arabic Docs:
+/home/idealchip_server/meqs/docs-ar/
+
+═══════════════════════════════════════════════════════════════
+   ACCESS FROM ANY DEVICE
+═══════════════════════════════════════════════════════════════
+
+1. Connect device to same network (WiFi/Ethernet)
+2. Open browser (Chrome/Safari/Firefox)
+3. Go to any URL above
+4. Login with credentials (if required)
+
+Works on:
+✓ Desktop Computers
+✓ Laptops
+✓ Tablets (iPad, Android)
+✓ Smartphones (iPhone, Android)
+✓ Smart TVs (for displays)
+
+═══════════════════════════════════════════════════════════════
+
+System is READY and RUNNING on network! 🎉
+
+Last Updated: May 17, 2026

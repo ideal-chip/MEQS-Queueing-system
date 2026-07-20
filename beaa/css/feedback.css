@@ -1,0 +1,79 @@
+/* iDEAL-Q — feedback kiosk screen */
+
+body.segoeUILight {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef2f5;
+    margin: 0;
+    padding-top: 60px;
+    min-height: 100vh;
+}
+
+body.noselect {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+body.no-cursor-r {
+    cursor: default;
+}
+
+.kiosk-lang {
+    display: flex;
+    gap: 8px;
+}
+
+.ribbon-left-content {
+    display: inline-block;
+    padding: 10px 30px;
+    font-size: 22px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+
+#feedback-main .row.card {
+    display: flex;
+    align-items: center;
+    margin: 0 0 12px;
+    background: #fff;
+}
+
+#feedback-main .row.card .col-md-8,
+#feedback-main .row.card .col-md-3,
+#feedback-main .row.card .col-md-1 {
+    float: none;
+}
+
+.rateval {
+    text-align: center;
+    font-weight: 700;
+    color: #f1c40f;
+    min-width: 24px;
+}
+
+#feedback-note {
+    text-align: center;
+    color: #27ae60;
+    padding: 60px 0;
+}
+
+#final-score {
+    margin: 10px 0;
+}
+
+.footer {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 20px 0 10px;
+}
+
+.footer .ftr-logo-con img {
+    vertical-align: middle;
+    margin: 0 6px;
+}
+
+/* star rating widget: a bit more breathing room + larger touch targets for kiosk use */
+.br-theme-fontawesome-stars .br-widget a,
+.br-theme-fontawesome-stars-o .br-widget a {
+    font-size: 26px;
+    margin-right: 6px;
+}

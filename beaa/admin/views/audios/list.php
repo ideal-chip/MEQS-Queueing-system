@@ -46,7 +46,7 @@ if ($shortBeep == 'active') {
             <tr>
                 <td >
                     <img style='width:16px;height:16px;cursor:pointer' 
-                         src='<?php echo $filesPath . "delete.png" ?>' 
+                         src='<?php echo $filesPath . "/delete.png" ?>' 
                          onclick='if (confirm("<?php echo getTextValue("deleteQuestion", $lang) . getTextValue("questionMark", $lang) ?>"))
                                          location.replace("<?php echo "?mode=delete&id=" . $row['audio_id'] ?>")'>
                 </td>
@@ -63,7 +63,7 @@ if ($shortBeep == 'active') {
     </table>  
 </div>
 <a href='?mode=add'>
-    <img src='<?php echo $filesPath . "add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
+    <img src='<?php echo $filesPath . "/add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
 </a>
 
 <script type="text/javascript">

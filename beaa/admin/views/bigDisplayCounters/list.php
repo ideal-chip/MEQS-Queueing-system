@@ -1,6 +1,6 @@
 <div class="well well-header"><?php echo getTextValue("bigDisplayCounters", $lang) ?></div>
 <a href='?mode=add'>
-    <img src='<?php echo $filesPath . "add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
+    <img src='<?php echo $filesPath . "/add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
 </a>
 <br><br>
 <div class="cats-c-con">
@@ -50,7 +50,7 @@
                         <div class="bdc">
                             <div class="bdc-del">
                                 <img style='width:16px;height:16px;cursor:pointer' 
-                                     src='<?php echo $filesPath . "delete.png" ?>' 
+                                     src='<?php echo $filesPath . "/delete.png" ?>' 
                                      onclick='if (confirm("<?php echo getTextValue("deleteQuestion", $lang) . getTextValue("questionMark", $lang) ?>"))
                                                          location.replace("<?php echo "?mode=delete&id=" . $dbc_id ?>");'>
                             </div>

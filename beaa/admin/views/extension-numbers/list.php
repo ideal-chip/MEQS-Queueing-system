@@ -31,5 +31,5 @@
 </table>
 <br>
 <a href='?mode=add'>
-    <img src='<?php echo $filesPath . "add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
+    <img src='<?php echo $filesPath . "/add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
 </a>

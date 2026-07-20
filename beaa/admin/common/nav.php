@@ -1,6 +1,8 @@
 <?php
 //-----------------------------------------< links >-------
-$parent = "/admin/";
+// Use dynamic base path from config.php
+$parent = defined('ADMIN_BASE_PATH') ? ADMIN_BASE_PATH : "/beaa/admin";
+$parent .= "/"; // Add trailing slash for compatibility
 ?>
 
 <div class="navi bg-white-gray">
@@ -14,7 +16,7 @@ $parent = "/admin/";
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand bg-white" href="./" id="mainPage">
-                    <span class="pad-5 round-5 "><img src="<?php echo $filesPath ?>/logos/ideal-q-small.png" class="" alt=""></span>
+                    <span class="pad-5 round-5 "><img src="<?php echo $filesPath ?>/logos/ideal-q-small.svg" class="" alt="iDEAL-Q" style="height:30px;"></span>
                 </a>
             </div>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">

@@ -66,12 +66,12 @@ $defLang = getValue("SELECT set_value FROM settings WHERE set_key='defaultLangua
             <div class="well well-header"><?php echo getTextValue("languages", $lang) ?></div>
             <div class="bg-white-gray round-10 pad-10 marg-v-10 s-30 center-block">
                 <a href="javascript:void(0)" class="btn btn-default btn-sm " onclick="setDefault('<?php echo $editLanguage ?>');"><?php echo $setDefaultLanguage ?></a>
-                <img src='<?php echo $filesPath . "add.png" ?> ' 
+                <img src='<?php echo $filesPath . "/add.png" ?> ' 
                      title='<?php echo getTextValue("add", $lang) ?> ' 
                      alt='<?php echo getTextValue("add", $lang) ?> ' 
                      style='vertical-align:middle;cursor:pointer;' 
                      onclick='addNewLang();'> 
-                <img src='<?php echo $filesPath . "delete.png" ?> ' 
+                <img src='<?php echo $filesPath . "/delete.png" ?> ' 
                      title='<?php echo getTextValue("delete", $lang) ?> ' 
                      alt='<?php echo getTextValue("delete", $lang) ?>' 
                      style='vertical-align:middle;cursor:pointer;' 
@@ -149,7 +149,7 @@ $defLang = getValue("SELECT set_value FROM settings WHERE set_key='defaultLangua
                 <div class="sec-hd"><?php echo getTextValue("words", $lang) ?></div>
                 <div class="form-inline">
                     <?php
-                    if ($file = fopen($filesPath . "keys.txt", "r")) {
+                    if ($file = fopen($filesPath . "/keys.txt", "r")) {
                         while (!feof($file)) {
                             $key = trim(fgets($file));
                             $value = trim(getValue("SELECT text_value FROM texts WHERE text_key='$key' AND text_language='$editLanguage';"));

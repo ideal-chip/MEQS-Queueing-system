@@ -45,7 +45,7 @@ $bulkDelay = $value == 'zero' ? 0 : $value;
                 <span class="glyphicon glyphicon-refresh"></span>
             </a>
             <a href='?mode=add' class="btn">
-                <img src='<?php echo $filesPath . "add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
+                <img src='<?php echo $filesPath . "/add.png" ?>' title='<?php echo getTextValue("add", $lang) ?>'>
             </a>
         </div>
     </div>
@@ -54,7 +54,7 @@ $bulkDelay = $value == 'zero' ? 0 : $value;
 <br>
 <div class="cats-c-con">
     <?php
-    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     mysqli_set_charset($conn, "utf8");
     $bd_ids = getColumn("SELECT distinct bd_id FROM bigdisplayservices order by bd_id;");
 
@@ -102,7 +102,7 @@ $bulkDelay = $value == 'zero' ? 0 : $value;
                         <th ><?php echo getTextValue("priority", $lang) ?></th>
                     </tr>
                     <?php
-                    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname);
+                    $conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
                     mysqli_set_charset($conn, "utf8");
                     $query = mysqli_query($conn, "SELECT * FROM bigdisplayservices WHERE bd_id=$bd_ids[$i] ;");
                     while ($row = mysqli_fetch_assoc($query)) {
@@ -111,7 +111,7 @@ $bulkDelay = $value == 'zero' ? 0 : $value;
                         ?>
                         <tr>
                             <td class="s-10">
-                                <img style='width:16px;height:16px;cursor:pointer;' src='<?php echo $filesPath . "delete.png"; ?>' onclick='if (confirm("<?php echo getTextValue("deleteQuestion", $lang) . getTextValue("questionMark", $lang) ?> "))
+                                <img style='width:16px;height:16px;cursor:pointer;' src='<?php echo $filesPath . "/delete.png"; ?>' onclick='if (confirm("<?php echo getTextValue("deleteQuestion", $lang) . getTextValue("questionMark", $lang) ?> "))
                                                     location.replace("<?php echo "?mode=delete&id=" . $row['bds_id'] ?>");' >
                             </td>
                             <td class="s-50">

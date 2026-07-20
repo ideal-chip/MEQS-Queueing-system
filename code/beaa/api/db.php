@@ -38,6 +38,14 @@ define('DB_USERNAME', envValue('DB_USER', 'project_demo_user'));
 define('DB_PASSWORD', envValue('DB_PASSWORD', 'ProjectDemo@12345'));
 define('DB_NAME', envValue('DB_NAME', 'project_demo_db'));
 
+/*
+ * PHP 8.1 changed the default mysqli error mode to throw exceptions on any
+ * failed query. This legacy (PHP 7) code relies on the classic silent mode
+ * where a failing query returns false/null. Restore it so a single bad query
+ * degrades gracefully instead of aborting the whole page.
+ */
+mysqli_report(MYSQLI_REPORT_OFF);
+
 /* Attempt to connect to MySQL database */
 
 $mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);

@@ -1,0 +1,64 @@
+/* iDEAL-Q Login Page Styles */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bdy-login {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.info-login {
+    text-align: center;
+}
+
+.logo-big {
+    padding: 30px;
+    background: white;
+}
+
+.logo-big img {
+    max-width: 200px;
+    height: auto;
+}
+
+.form-signin {
+    padding: 30px;
+}
+
+.form-signin .form-control {
+    position: relative;
+    height: auto;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.form-signin .btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.has-error .form-control {
+    border-color: #e74c3c;
+}
+
+.help-block {
+    color: #e74c3c;
+    font-size: 12px;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}

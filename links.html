@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iDEAL-Q - Quick Links</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        .warning strong { color: #856404; }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #34495e;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .link-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #3498db;
+        }
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #d5dbdb;
+        }
+        .link-card h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .link-card a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 12px;
+            word-break: break-all;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .link-card a:hover {
+            text-decoration: underline;
+        }
+        .credentials {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .credentials h3 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+        .cred-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .cred-item strong {
+            color: #2c3e50;
+            display: inline-block;
+            width: 80px;
+        }
+        .cred-item code {
+            background: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 3px;
+            color: #e83e8c;
+            font-family: 'Courier New', monospace;
+        }
+        .icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .quick-access {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #e8f4f8;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 iDEAL-Q System - Quick Links</h1>
+        <p class="subtitle">Network: 192.168.1.72:8000</p>
+        
+        <div class="warning">
+            <strong>⚠️ IMPORTANT:</strong> All URLs must include <code>/beaa/</code> in the path!<br>
+            ❌ Wrong: <code>/admin/flow.php</code><br>
+            ✅ Correct: <code>/beaa/admin/flow.php</code>
+        </div>
+
+        <div class="quick-access">
+            <h2>🎯 Quick Access</h2>
+            <a href="http://192.168.1.72:8000/" class="btn-primary">🏠 Home Page</a>
+            <a href="http://192.168.1.72:8000/beaa/admin/account/login.php" class="btn-primary">🔐 Admin Login</a>
+            <a href="http://192.168.1.72:8000/beaa/admin/" class="btn-primary">📊 Dashboard</a>
+        </div>
+
+        <div class="credentials">
+            <h3>🔑 Login Credentials</h3>
+            <div class="cred-item">
+                <strong>Admin:</strong><br>
+                Email: <code>admin.demo@example.com</code><br>
+                Password: <code>AdminDemo@123</code>
+            </div>
+            <div class="cred-item">
+                <strong>Operator:</strong><br>
+                Email: <code>operator.demo@example.com</code><br>
+                Password: <code>OperatorDemo@123</code>
+            </div>
+            <div class="cred-item">
+                <strong>Viewer:</strong><br>
+                Email: <code>viewer.demo@example.com</code><br>
+                Password: <code>ViewerDemo@123</code>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">📊</span>Reports & Operations</h2>
+            <div class="link-grid">
+                <div class="link-card">
+                    <h3>Flow Report</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/flow.php">http://192.168.1.72:8000/beaa/admin/flow.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Follow-up Cards</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/followups.php">http://192.168.1.72:8000/beaa/admin/followups.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Feedbacks</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/feedbacks.php">http://192.168.1.72:8000/beaa/admin/feedbacks.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Tickets</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/tickets.php">http://192.168.1.72:8000/beaa/admin/tickets.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Search</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/search.php">http://192.168.1.72:8000/beaa/admin/search.php</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">⚙️</span>System Settings</h2>
+            <div class="link-grid">
+                <div class="link-card">
+                    <h3>Categories</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/categories.php">http://192.168.1.72:8000/beaa/admin/categories.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Sub-categories</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/subcategories.php">http://192.168.1.72:8000/beaa/admin/subcategories.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Counters</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/counters.php">http://192.168.1.72:8000/beaa/admin/counters.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Counter Categories</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/countersCategories.php">http://192.168.1.72:8000/beaa/admin/countersCategories.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Kiosks</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/kiosks.php">http://192.168.1.72:8000/beaa/admin/kiosks.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Kiosk Buttons</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/kioskButtons.php">http://192.168.1.72:8000/beaa/admin/kioskButtons.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Displays</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/displays.php">http://192.168.1.72:8000/beaa/admin/displays.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Big Displays</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/bigdisplays.php">http://192.168.1.72:8000/beaa/admin/bigdisplays.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Zones</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/zones.php">http://192.168.1.72:8000/beaa/admin/zones.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Audios</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/audios.php">http://192.168.1.72:8000/beaa/admin/audios.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>File Browser</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/file-browser.php">http://192.168.1.72:8000/beaa/admin/file-browser.php</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">👥</span>Users & Clerks</h2>
+            <div class="link-grid">
+                <div class="link-card">
+                    <h3>Users</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/users.php">http://192.168.1.72:8000/beaa/admin/users.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Clerks</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/clerks.php">http://192.168.1.72:8000/beaa/admin/clerks.php</a>
+                </div>
+                <div class="link-card">
+                    <h3>Languages</h3>
+                    <a href="http://192.168.1.72:8000/beaa/admin/languages.php">http://192.168.1.72:8000/beaa/admin/languages.php</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">📺</span>Public Pages</h2>
+            <div class="link-grid">
+                <div class="link-card">
+                    <h3>Counter Portal</h3>
+                    <a href="http://192.168.1.72:8000/beaa/counter/">http://192.168.1.72:8000/beaa/counter/</a>
+                </div>
+                <div class="link-card">
+                    <h3>Big Display</h3>
+                    <a href="http://192.168.1.72:8000/beaa/bigdisplay/?id=1">http://192.168.1.72:8000/beaa/bigdisplay/?id=1</a>
+                </div>
+                <div class="link-card">
+                    <h3>Regular Display</h3>
+                    <a href="http://192.168.1.72:8000/beaa/display/?id=1">http://192.168.1.72:8000/beaa/display/?id=1</a>
+                </div>
+                <div class="link-card">
+                    <h3>Feedback</h3>
+                    <a href="http://192.168.1.72:8000/beaa/feedback/">http://192.168.1.72:8000/beaa/feedback/</a>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <p style="color: #7f8c8d;"><strong>📚 Documentation:</strong> See CORRECT-URLS.md and QUICK-FIX-GUIDE.md for more details</p>
+            <p style="color: #7f8c8d; margin-top: 10px;"><strong>Last Updated:</strong> May 17, 2026 12:21 PM</p>
+        </div>
+    </div>
+</body>
+</html>

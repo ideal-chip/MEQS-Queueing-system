@@ -1,0 +1,88 @@
+# iDEAL-Q System - Apache Rewrite Rules
+# Enable URL rewriting
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Redirect /admin/* to /beaa/admin/*
+    RewriteCond %{REQUEST_URI} ^/admin/(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^admin/(.*)$ /beaa/admin/$1 [R=301,L]
+    
+    # Redirect /api/* to /beaa/api/*
+    RewriteCond %{REQUEST_URI} ^/api/(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^api/(.*)$ /beaa/api/$1 [R=301,L]
+    
+    # Redirect /counter/* to /beaa/counter/*
+    RewriteCond %{REQUEST_URI} ^/counter/(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^counter/(.*)$ /beaa/counter/$1 [R=301,L]
+    
+    # Redirect /files/* to /beaa/files/*
+    RewriteCond %{REQUEST_URI} ^/files/(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^files/(.*)$ /beaa/files/$1 [R=301,L]
+    
+    # Redirect /css/* to /beaa/css/*
+    RewriteCond %{REQUEST_URI} ^/css/(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^css/(.*)$ /beaa/css/$1 [R=301,L]
+    
+    # Redirect /js/* to /beaa/js/*
+    RewriteCond %{REQUEST_URI} ^/js/(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^js/(.*)$ /beaa/js/$1 [R=301,L]
+
+    # Redirect /feedback/* to /beaa/feedback/*
+    RewriteCond %{REQUEST_URI} ^/feedback(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^feedback(.*)$ /beaa/feedback$1 [R=301,L]
+
+    # Redirect /display/* to /beaa/display/*
+    RewriteCond %{REQUEST_URI} ^/display(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^display(.*)$ /beaa/display$1 [R=301,L]
+
+    # Redirect /bigdisplay/* to /beaa/bigdisplay/*
+    RewriteCond %{REQUEST_URI} ^/bigdisplay(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^bigdisplay(.*)$ /beaa/bigdisplay$1 [R=301,L]
+
+    # Redirect /audio/* to /beaa/audio/*
+    RewriteCond %{REQUEST_URI} ^/audio(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^audio(.*)$ /beaa/audio$1 [R=301,L]
+
+    # Redirect /bulkcall/* to /beaa/bulkcall/*
+    RewriteCond %{REQUEST_URI} ^/bulkcall(.*)$
+    RewriteCond %{REQUEST_URI} !^/beaa/
+    RewriteRule ^bulkcall(.*)$ /beaa/bulkcall$1 [R=301,L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>

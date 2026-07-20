@@ -17,10 +17,10 @@ include_once $view . 'process.php';
 <html>
     <head>
         <?php include_once './common/head.php'; ?>
-        <link href="../css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
-        <link href="../css/jquery-ui.min.css" rel="stylesheet" type="text/css"/>
-        <link href="../css/chartist.min.css" rel="stylesheet" type="text/css"/>
-        <link href="../css/flow.css" rel="stylesheet" type="text/css"/>
+        <link href="<?php echo $cssPath; ?>/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+        <link href="<?php echo $cssPath; ?>/jquery-ui.min.css" rel="stylesheet" type="text/css"/>
+        <link href="<?php echo $cssPath; ?>/chartist.min.css" rel="stylesheet" type="text/css"/>
+        <link href="<?php echo $cssPath; ?>/flow.css" rel="stylesheet" type="text/css"/>
     </head>
     <body style="direction:<?php echo $dir ?>;">
         <?php include_once './common/nav.php'; ?>

@@ -1,0 +1,14 @@
+/* iDEAL-Q — admin ticket search */
+
+.list-group-item {
+    cursor: default;
+}
+
+.list-group-item.marked {
+    border-left: 3px solid #f1c40f;
+}
+
+#chart-data table td,
+.table-condensed td {
+    vertical-align: middle;
+}

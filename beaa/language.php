@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/api/db.php";
 
 $genders = array(1 => 'female', 2 => 'male');
@@ -88,7 +89,17 @@ function getRequestVal($var, $defualtval = '', $type = 'get') {
 }
 
 function createLink($name, $page, $icon = '', $title = '', $class = '', $attr = '') {
-    $page = $page . ".php";
+    // Check if page already has .php extension
+    if (substr($page, -4) !== '.php') {
+        $page = $page . ".php";
+    }
+    
+    // Make sure link is properly formatted
+    // If page doesn't start with http or /, it's a relative path
+    if (strpos($page, 'http') !== 0 && strpos($page, '/') !== 0) {
+        $page = '/' . $page;
+    }
+    
     $iconFull = (!empty($icon)) ? "<i class='$icon'></i>" : '';
     echo "<a href='$page' title='$title' class='$class' $attr > $name $iconFull</a>";
 }

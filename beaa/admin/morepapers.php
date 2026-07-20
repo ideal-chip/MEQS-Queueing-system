@@ -105,7 +105,7 @@ $totalSize = count($otherFiles);
                     <tr>
                         <td>
                             <img id='<?php echo $other ?>' 
-                                 src='<?php echo $filesPath . "delete.png" ?>' 
+                                 src='<?php echo $filesPath . "/delete.png" ?>' 
                                  style='cursor:pointer;width:16px;height:16px;' 
                                  onclick='deleteFile(this.id)' >
                         </td>

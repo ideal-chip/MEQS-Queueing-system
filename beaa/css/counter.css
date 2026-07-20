@@ -1,0 +1,256 @@
+/* iDEAL-Q — clerk counter workstation */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background-color: #eef2f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ---- login screen ---- */
+body.bdy-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.logo-big img {
+    max-height: 70px;
+    display: block;
+    margin: 0 auto 15px;
+}
+
+.form-signin {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    width: 340px;
+}
+
+.form-signin .form-control {
+    margin-bottom: 12px;
+}
+
+.info-login {
+    margin-bottom: 15px;
+    color: #7f8c8d;
+}
+
+/* ---- main workstation ---- */
+body.bdy-main {
+    padding-top: 46px;
+}
+
+.row.hd {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    background: #2c3e50;
+    margin: 0;
+    height: 46px;
+    padding: 0 10px;
+    color: #fff;
+}
+
+.row.hd .line, .row.hd .lang-con {
+    margin-inline-start: 8px;
+}
+
+.space-200 { min-width: 120px; }
+.logoContainer img { max-height: 34px; }
+
+.line-h-pad {
+    margin-inline-start: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.badge-red {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.bdy {
+    padding: 10px;
+}
+
+.no-marg { margin: 0; }
+.no-pad-up { padding-top: 0; }
+.pad-5-10 { padding: 5px 10px; }
+
+.card-bdy {
+    padding: 8px;
+    text-align: center;
+}
+
+.pend-con {
+    background: #fff;
+    border-radius: 6px;
+    margin-top: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    overflow: hidden;
+}
+
+.pending-hd {
+    background: #34495e;
+    color: #fff;
+    padding: 8px 10px;
+    font-weight: 600;
+}
+
+.pending-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.p-remove { color: #e74c3c; }
+.p-tick { font-weight: 700; }
+
+.btn-counter {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 6px;
+}
+
+.border-top { border-top: 1px solid #ddd; }
+
+#eventno {
+    font-size: 3vw;
+    font-weight: 900;
+    text-align: center;
+    color: #2c3e50;
+}
+
+.corner-box-full {
+    text-align: center;
+    color: #95a5a6;
+    font-size: 13px;
+}
+
+.table-close tr {
+    cursor: default;
+}
+
+.table-bordered-bottom tr {
+    border-bottom: 1px solid #eee;
+}
+
+.table-100 { width: 100%; }
+
+.shader {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,.6);
+    z-index: 5;
+}
+
+.cat-con-sm {
+    padding: 8px;
+    background: #fff;
+    width: 100%;
+}
+
+.cat-con-sm.bg-red {
+    background-color: #c0392b;
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    padding: 6px;
+}
+
+.arc-top-8 {
+    border-radius: 0 0 8px 8px;
+    text-align: center;
+    padding: 10px;
+}
+
+.cat-radio {
+    opacity: .5;
+}
+
+.cat-radio.pressed {
+    opacity: 1;
+    background-color: #27ae60;
+    color: #fff;
+    border-color: #27ae60;
+}
+
+.marg83 { margin: 3px; }
+.curser { cursor: pointer; }
+
+.cards-con .panel {
+    margin-bottom: 10px;
+}
+
+.badged {
+    display: inline-block;
+    width: 18px; height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    background: #ecf0f1;
+    font-size: 11px;
+    margin: 0 2px;
+}
+
+/* ---- transfer dialog ---- */
+#fullScreen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 2000;
+}
+
+#transferDialog {
+    display: none;
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2001;
+}
+
+.dialogInner {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.box-red {
+    background-color: #fdecea;
+    padding: 6px 10px;
+    border-radius: 4px;
+}
+
+.transfer-option {
+    margin-bottom: 8px;
+}
+
+/* ---- booking / followup modal ---- */
+.vertical-t-bottom { vertical-align: bottom; }
+.overly {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,.8);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 10px;
+}
+.fullscreen { position: absolute; inset: 0; }
+
+.footer {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 15px 0;
+}

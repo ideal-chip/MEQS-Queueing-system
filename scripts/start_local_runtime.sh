@@ -31,11 +31,21 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-if ! pgrep -f "$PHP_BIN -S 127.0.0.1:8000" >/dev/null 2>&1; then
-  (cd "$PROJECT_DIR" && "$PHP_BIN" -S 127.0.0.1:8000 > "$LOG_DIR/php-server.log" 2>&1 & echo $! > "$RUN_DIR/php-server.pid")
+if ! pgrep -f "$PHP_BIN -S 0.0.0.0:8000" >/dev/null 2>&1; then
+  (cd "$PROJECT_DIR" && "$PHP_BIN" -S 0.0.0.0:8000 > "$LOG_DIR/php-server.log" 2>&1 & echo $! > "$RUN_DIR/php-server.pid")
 fi
 
-echo "MEQS local runtime is running:"
-echo "  Admin:        http://127.0.0.1:8000/beaa/admin/account/login.php"
-echo "  Counter:      http://127.0.0.1:8000/beaa/counter/"
-echo "  File browser: http://127.0.0.1:8000/beaa/admin/file-browser.php"
+SERVER_IP=$(hostname -I | awk '{print $1}')
+echo "MEQS runtime is running on network:"
+echo "  Local:        http://127.0.0.1:8000/"
+echo "  Network:      http://$SERVER_IP:8000/"
+echo ""
+echo "Portal URLs:"
+echo "  Home:         http://$SERVER_IP:8000/"
+echo "  Admin Login:  http://$SERVER_IP:8000/beaa/admin/account/login.php"
+echo "  Counter:      http://$SERVER_IP:8000/beaa/counter/"
+echo "  File Browser: http://$SERVER_IP:8000/beaa/admin/file-browser.php"
+echo "  Big Display:  http://$SERVER_IP:8000/beaa/bigdisplay/?id=1"
+echo "  Display:      http://$SERVER_IP:8000/beaa/display/?id=1"
+echo "  Kiosk API:    http://$SERVER_IP:8000/beaa/api/kiosk/get.php?id=1"
+echo "  Feedback:     http://$SERVER_IP:8000/beaa/feedback/"

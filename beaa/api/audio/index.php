@@ -13,7 +13,7 @@ $query = "SELECT audios_logs.log_id as 'logID', counters.counter_audio as 'audio
 			AND events.event_category=categories.category_id
 			AND audios_logs.log_counter=counters.counter_id
 			ORDER BY audios_logs.log_time ASC,events.event_no ASC LIMIT 1;";
-if ($conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname)) {
+if ($conn = mysqli_connect($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT)) {
     if ($result = mysqli_query($conn, $query)) {
         while ($row = mysqli_fetch_assoc($result)) {
             executeQuery("UPDATE audios_logs SET log_seen=1 WHERE log_id=" . $row['logID'] . ";");
