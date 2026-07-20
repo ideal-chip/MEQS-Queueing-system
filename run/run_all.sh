@@ -334,9 +334,9 @@ if [ "$WEB_UP" = 1 ]; then
 
   # Real write check: issue a kiosk ticket, confirm it lands in the database.
   if [ "$DB_UP" = 1 ]; then
-    BEFORE=$(mysql_root -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
+    BEFORE=$(mysql_app -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
     TID=$(timeout 15 wget -q --timeout=12 --tries=1 -O - "$BASE/beaa/api/kiosk/set.php?category=1&kiosk=1&lang=ar" 2>/dev/null)
-    AFTER=$(mysql_root -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
+    AFTER=$(mysql_app -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
     if [ "${AFTER:-0}" -gt "${BEFORE:-0}" ] 2>/dev/null; then
       ok "Ticket issuance works (events: $BEFORE -> $AFTER, ticket: $TID)"
     else
