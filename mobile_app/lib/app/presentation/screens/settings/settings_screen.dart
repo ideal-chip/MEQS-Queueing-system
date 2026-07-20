@@ -16,7 +16,7 @@ class SettingsScreen extends StatelessWidget {
     final settings = Get.find<SettingsController>();
 
     return Scaffold(
-      appBar: const AppBar(title: Text('Settings')),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
