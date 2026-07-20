@@ -2,16 +2,21 @@
 # ============================================================================
 #  MEQS / iDEAL-Q  —  run_all.sh
 #  One-shot launcher: clears caches, opens the database if it is closed,
-#  (re)starts the backend (MariaDB) and the frontend (PHP web server),
-#  runs end-to-end health checks (including a regression test for the
-#  "/feedback shows the home page instead of the feedback kiosk" bug),
-#  and prints/saves a pass/warn/fail report.
+#  (re)starts the backend (Oracle MySQL 8.4, systemd service "mysql") and
+#  the frontend (PHP web server), runs end-to-end health checks (including
+#  a regression test for the "/feedback shows the home page instead of the
+#  feedback kiosk" bug and a live check that the DB engine really is MySQL,
+#  not MariaDB), and prints/saves a pass/warn/fail report.
 #
 #  Usage:   bash run/run_all.sh
 #  Options:
 #     --reset-db     drop and rebuild the database from schema + demo seed
 #     --host=IP      web bind/report host (default 192.168.1.41)
 #     --port=N       web port (default 8000)
+#
+#  DB credentials come from .env (see .env.example) -- there is no
+#  built-in fallback password. The portable MariaDB under .runtime/mariadb
+#  is kept only as an offline rollback reference; nothing here starts it.
 # ============================================================================
 set -u
 
@@ -20,18 +25,28 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PHP_BIN="$PROJECT_DIR/.runtime/env/bin/php"
 PHP_INI="$PROJECT_DIR/.runtime/php-ext/php.ini"
 ROUTER="$PROJECT_DIR/router.php"
-MYSQLD_BIN="$PROJECT_DIR/.runtime/mariadb/bin/mariadbd"
-MYSQL_BIN="$PROJECT_DIR/.runtime/mariadb/bin/mariadb"
+MYSQL_BIN="mysql"
 RUN_DIR="$PROJECT_DIR/.runtime/run"
 LOG_DIR="$PROJECT_DIR/.runtime/logs"
-MYSQL_DATA="$PROJECT_DIR/.runtime/mysql-data"
 
 HTTP_HOST="192.168.1.41"
 HTTP_PORT="8000"
-DB_PORT="3307"
-DB_NAME="project_demo_db"
-DB_USER="project_demo_user"
-DB_PASS="ProjectDemo@12345"
+
+# ---- load DB_* from .env (never hardcode credentials here) ----
+if [ -f "$PROJECT_DIR/.env" ]; then
+  while IFS='=' read -r k v; do
+    case "$k" in
+      ''|'#'*) continue ;;
+    esac
+    v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
+    export "ENV_$k=$v" 2>/dev/null
+  done < "$PROJECT_DIR/.env"
+fi
+DB_HOST="${ENV_DB_HOST:-127.0.0.1}"
+DB_PORT="${ENV_DB_PORT:-3306}"
+DB_NAME="${ENV_DB_NAME:-project_demo_db}"
+DB_USER="${ENV_DB_USER:-project_demo_user}"
+DB_PASS="${ENV_DB_PASSWORD:-}"
 
 RESET_DB=0
 for arg in "$@"; do
@@ -125,9 +140,17 @@ for ext in mysqli mbstring; do
   fi
 done
 
-for f in "$MYSQLD_BIN" "$MYSQL_BIN"; do
-  [ -x "$f" ] && ok "Database tool present: $(basename "$f")" || fail "Database tool missing: $f"
-done
+if command -v mysql >/dev/null 2>&1; then
+  ok "mysql client present ($(mysql --version 2>/dev/null | head -c 60))"
+else
+  fail "mysql client not found on PATH -- is Oracle MySQL installed?"
+fi
+
+if [ -z "$DB_PASS" ]; then
+  fail "DB_PASSWORD is not set in .env -- cannot connect. See .env.example."
+  log ""; log "  Summary: ${C_OK}PASS $PASS${C_0} ${C_WARN}WARN $WARN${C_0} ${C_ERR}FAIL $FAIL${C_0}"
+  exit 1
+fi
 
 if [ -f "$ROUTER" ]; then
   ok "router.php present (fixes /feedback and other short URLs)"
