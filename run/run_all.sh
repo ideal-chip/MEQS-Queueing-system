@@ -2,16 +2,21 @@
 # ============================================================================
 #  MEQS / iDEAL-Q  —  run_all.sh
 #  One-shot launcher: clears caches, opens the database if it is closed,
-#  (re)starts the backend (MariaDB) and the frontend (PHP web server),
-#  runs end-to-end health checks (including a regression test for the
-#  "/feedback shows the home page instead of the feedback kiosk" bug),
-#  and prints/saves a pass/warn/fail report.
+#  (re)starts the backend (Oracle MySQL 8.4, systemd service "mysql") and
+#  the frontend (PHP web server), runs end-to-end health checks (including
+#  a regression test for the "/feedback shows the home page instead of the
+#  feedback kiosk" bug and a live check that the DB engine really is MySQL,
+#  not MariaDB), and prints/saves a pass/warn/fail report.
 #
 #  Usage:   bash run/run_all.sh
 #  Options:
 #     --reset-db     drop and rebuild the database from schema + demo seed
 #     --host=IP      web bind/report host (default 192.168.1.41)
 #     --port=N       web port (default 8000)
+#
+#  DB credentials come from .env (see .env.example) -- there is no
+#  built-in fallback password. The portable MariaDB under .runtime/mariadb
+#  is kept only as an offline rollback reference; nothing here starts it.
 # ============================================================================
 set -u
 
@@ -20,18 +25,28 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PHP_BIN="$PROJECT_DIR/.runtime/env/bin/php"
 PHP_INI="$PROJECT_DIR/.runtime/php-ext/php.ini"
 ROUTER="$PROJECT_DIR/router.php"
-MYSQLD_BIN="$PROJECT_DIR/.runtime/mariadb/bin/mariadbd"
-MYSQL_BIN="$PROJECT_DIR/.runtime/mariadb/bin/mariadb"
+MYSQL_BIN="mysql"
 RUN_DIR="$PROJECT_DIR/.runtime/run"
 LOG_DIR="$PROJECT_DIR/.runtime/logs"
-MYSQL_DATA="$PROJECT_DIR/.runtime/mysql-data"
 
 HTTP_HOST="192.168.1.41"
 HTTP_PORT="8000"
-DB_PORT="3307"
-DB_NAME="project_demo_db"
-DB_USER="project_demo_user"
-DB_PASS="ProjectDemo@12345"
+
+# ---- load DB_* from .env (never hardcode credentials here) ----
+if [ -f "$PROJECT_DIR/.env" ]; then
+  while IFS='=' read -r k v; do
+    case "$k" in
+      ''|'#'*) continue ;;
+    esac
+    v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
+    export "ENV_$k=$v" 2>/dev/null
+  done < "$PROJECT_DIR/.env"
+fi
+DB_HOST="${ENV_DB_HOST:-127.0.0.1}"
+DB_PORT="${ENV_DB_PORT:-3306}"
+DB_NAME="${ENV_DB_NAME:-project_demo_db}"
+DB_USER="${ENV_DB_USER:-project_demo_user}"
+DB_PASS="${ENV_DB_PASSWORD:-}"
 
 RESET_DB=0
 for arg in "$@"; do
@@ -125,9 +140,17 @@ for ext in mysqli mbstring; do
   fi
 done
 
-for f in "$MYSQLD_BIN" "$MYSQL_BIN"; do
-  [ -x "$f" ] && ok "Database tool present: $(basename "$f")" || fail "Database tool missing: $f"
-done
+if command -v mysql >/dev/null 2>&1; then
+  ok "mysql client present ($(mysql --version 2>/dev/null | head -c 60))"
+else
+  fail "mysql client not found on PATH -- is Oracle MySQL installed?"
+fi
+
+if [ -z "$DB_PASS" ]; then
+  fail "DB_PASSWORD is not set in .env -- cannot connect. See .env.example."
+  log ""; log "  Summary: ${C_OK}PASS $PASS${C_0} ${C_WARN}WARN $WARN${C_0} ${C_ERR}FAIL $FAIL${C_0}"
+  exit 1
+fi
 
 if [ -f "$ROUTER" ]; then
   ok "router.php present (fixes /feedback and other short URLs)"
@@ -136,80 +159,79 @@ else
 fi
 
 # ============================================================================
-#  Phase 2: Backend — MariaDB (open the database if it is closed, auto-repair)
+#  Phase 2: Backend — Oracle MySQL 8.4 (systemd service "mysql")
 # ============================================================================
-head_ "Phase 2: Backend — MariaDB database"
+head_ "Phase 2: Backend — Oracle MySQL database"
 
-mysql_root() { "$MYSQL_BIN" --protocol=TCP -h127.0.0.1 -P"$DB_PORT" -uroot "$@" 2>/dev/null; }
+mysql_app() { mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$@" 2>/dev/null; }
 
-if pgrep -f "$MYSQLD_BIN.*$MYSQL_DATA" >/dev/null 2>&1; then
-  ok "MariaDB is already running"
+if systemctl is-active --quiet mysql 2>/dev/null; then
+  ok "mysql.service is already running"
 else
-  if [ ! -d "$MYSQL_DATA/mysql" ]; then
-    fail "Database data directory is missing/corrupt: $MYSQL_DATA"
+  log "  ... database service is closed, attempting to open it (systemctl start mysql)"
+  # Only works if this shell already holds a cached sudo ticket (NOPASSWD or a
+  # recent successful `sudo` in this session); this script never carries or
+  # prompts for a password itself.
+  if sudo -n systemctl start mysql >/dev/null 2>&1; then
+    sleep 2
+  fi
+  if systemctl is-active --quiet mysql 2>/dev/null; then
+    ok "mysql.service started"
   else
-    log "  ... database was closed, opening it now"
-    "$MYSQLD_BIN" --no-defaults \
-      --basedir="$PROJECT_DIR/.runtime/mariadb" \
-      --datadir="$MYSQL_DATA" \
-      --socket="$RUN_DIR/mysql.sock" \
-      --pid-file="$RUN_DIR/mysql.pid" \
-      --port="$DB_PORT" --bind-address=127.0.0.1 \
-      --log-error="$LOG_DIR/mariadb.err" >/dev/null 2>&1 &
-    echo $! > "$RUN_DIR/mariadb.wrapper.pid"
+    fail "mysql.service is not running and could not be started without a password."
+    log "        Run this yourself, then re-run this script:  sudo systemctl start mysql"
   fi
 fi
 
 DB_UP=0
-for i in $(seq 1 30); do
-  if mysql_root -e "SELECT 1" >/dev/null 2>&1; then DB_UP=1; break; fi
+for i in $(seq 1 20); do
+  if mysql_app -e "SELECT 1" >/dev/null 2>&1; then DB_UP=1; break; fi
   sleep 1
 done
 if [ "$DB_UP" = 1 ]; then
-  ok "Database is open and accepting connections (port $DB_PORT)"
+  ok "Database is open and accepting connections ($DB_HOST:$DB_PORT)"
 else
-  fail "Database did not respond after 30s. Last log lines:"
-  tail -n 8 "$LOG_DIR/mariadb.err" 2>/dev/null | sed 's/^/        /' | tee -a "$REPORT"
+  fail "Database did not accept app-user connections after 20s."
+fi
+
+# Verify server identity every run -- refuse to treat a non-MySQL server
+# (e.g. MariaDB restored by mistake on the same port) as healthy.
+if [ "$DB_UP" = 1 ]; then
+  ENGINE_INFO=$(mysql_app -sN -e "SELECT VERSION(), @@version_comment;" 2>/dev/null)
+  if echo "$ENGINE_INFO" | grep -qi mariadb; then
+    fail "Connected server identifies as MariaDB, not Oracle MySQL: $ENGINE_INFO"
+    DB_UP=0
+  elif [ -n "$ENGINE_INFO" ]; then
+    ok "Engine verified: $(echo "$ENGINE_INFO" | tr '\n' ' ')"
+  else
+    warn "Could not read server version/comment to verify engine identity"
+  fi
 fi
 
 if [ "$DB_UP" = 1 ] && [ "$RESET_DB" = 1 ]; then
   log "  ... (--reset-db) rebuilding the database from scratch"
-  mysql_root -e "DROP DATABASE IF EXISTS $DB_NAME;"
+  mysql_app -e "DROP DATABASE IF EXISTS $DB_NAME; CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
 fi
 
 if [ "$DB_UP" = 1 ]; then
-  HAS_DB=$(mysql_root -sN -e "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='$DB_NAME';" 2>/dev/null)
-  HAS_TBL=$(mysql_root -sN -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB_NAME';" 2>/dev/null)
-  if [ "${HAS_DB:-0}" = "1" ] && [ "${HAS_TBL:-0}" -ge 20 ] 2>/dev/null; then
+  HAS_TBL=$(mysql_app -sN -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB_NAME';" 2>/dev/null)
+  if [ "${HAS_TBL:-0}" -ge 20 ] 2>/dev/null; then
     ok "Database '$DB_NAME' exists (${HAS_TBL} tables)"
   else
-    warn "Database is missing/incomplete — auto-repairing now"
-    mysql_root < "$PROJECT_DIR/database/create_demo_database.sql" 2>>"$REPORT" \
-      && ok "Created database, user and grants" || fail "create_demo_database.sql failed"
-    mysql_root "$DB_NAME" < "$PROJECT_DIR/database/schema.sql" 2>>"$REPORT" \
-      && ok "Applied schema.sql" || fail "schema.sql failed"
-    mysql_root "$DB_NAME" < "$PROJECT_DIR/database/demo_seed.sql" 2>>"$REPORT" \
+    warn "Database is missing/incomplete — auto-repairing now (schema.sql + demo_seed.sql)"
+    mysql_app "$DB_NAME" < "$PROJECT_DIR/database/schema.sql" 2>>"$REPORT" \
+      && ok "Applied schema.sql" || fail "schema.sql failed (app user needs CREATE/ALTER/INDEX on $DB_NAME)"
+    mysql_app "$DB_NAME" < "$PROJECT_DIR/database/demo_seed.sql" 2>>"$REPORT" \
       && ok "Loaded demo_seed.sql" || fail "demo_seed.sql failed"
   fi
 
-  if "$MYSQL_BIN" --protocol=TCP -h127.0.0.1 -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
-       -e "SELECT 1" >/dev/null 2>&1; then
-    ok "App database user '$DB_USER' connects successfully"
-  else
-    warn "App database user cannot connect — recreating user and grants"
-    mysql_root < "$PROJECT_DIR/database/create_demo_database.sql" 2>>"$REPORT"
-    "$MYSQL_BIN" --protocol=TCP -h127.0.0.1 -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
-       -e "SELECT 1" >/dev/null 2>&1 \
-       && ok "App database user connection repaired" || fail "App database user still cannot connect"
-  fi
-
   PHP_DB=$("$PHP_BIN" -c "$PHP_INI" -r '
-    $m=@new mysqli("127.0.0.1","'"$DB_USER"'","'"$DB_PASS"'","'"$DB_NAME"'",'"$DB_PORT"');
+    $m=@new mysqli("'"$DB_HOST"'","'"$DB_USER"'","'"$DB_PASS"'","'"$DB_NAME"'",'"$DB_PORT"');
     if($m->connect_errno){echo "ERR:".$m->connect_error;exit;}
     $r=$m->query("SELECT COUNT(*) c FROM users"); $x=$r?$r->fetch_assoc():["c"=>"?"];
     echo "OK:".$m->server_info.":users=".$x["c"];' 2>&1)
   case "$PHP_DB" in
-    OK:*) ok "PHP <-> MariaDB via mysqli: ${PHP_DB#OK:}" ;;
+    OK:*) ok "PHP <-> MySQL via mysqli: ${PHP_DB#OK:}" ;;
     *)    fail "PHP cannot connect to the database: $PHP_DB" ;;
   esac
 fi
@@ -312,9 +334,9 @@ if [ "$WEB_UP" = 1 ]; then
 
   # Real write check: issue a kiosk ticket, confirm it lands in the database.
   if [ "$DB_UP" = 1 ]; then
-    BEFORE=$(mysql_root -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
+    BEFORE=$(mysql_app -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
     TID=$(timeout 15 wget -q --timeout=12 --tries=1 -O - "$BASE/beaa/api/kiosk/set.php?category=1&kiosk=1&lang=ar" 2>/dev/null)
-    AFTER=$(mysql_root -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
+    AFTER=$(mysql_app -sN -e "SELECT COUNT(*) FROM $DB_NAME.events;" 2>/dev/null)
     if [ "${AFTER:-0}" -gt "${BEFORE:-0}" ] 2>/dev/null; then
       ok "Ticket issuance works (events: $BEFORE -> $AFTER, ticket: $TID)"
     else

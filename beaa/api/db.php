@@ -32,11 +32,21 @@ function envValue($key, $default = '') {
 
 //-------------------------------------< global mysqli method >----------
 
-define('DB_SERVER', envValue('DB_HOST', 'localhost'));
+// DB_ENGINE is a documentation/intent flag checked below after connecting;
+// it does not select a driver -- this app only ever speaks mysqli.
+define('DB_ENGINE', envValue('DB_ENGINE', 'mysql'));
+define('DB_SERVER', envValue('DB_HOST', '127.0.0.1'));
 define('DB_PORT', (int) envValue('DB_PORT', '3306'));
 define('DB_USERNAME', envValue('DB_USER', 'project_demo_user'));
-define('DB_PASSWORD', envValue('DB_PASSWORD', 'ProjectDemo@12345'));
+define('DB_PASSWORD', envValue('DB_PASSWORD', ''));
 define('DB_NAME', envValue('DB_NAME', 'project_demo_db'));
+
+if (DB_ENGINE !== 'mysql') {
+    die("FATAL: DB_ENGINE must be 'mysql'. This application only supports Oracle MySQL Community Server.");
+}
+if (DB_PASSWORD === '') {
+    die("FATAL: DB_PASSWORD is not set. Configure .env (see .env.example) -- there is no built-in default credential.");
+}
 
 /*
  * PHP 8.1 changed the default mysqli error reporting mode to
@@ -49,12 +59,25 @@ define('DB_NAME', envValue('DB_NAME', 'project_demo_db'));
  */
 mysqli_report(MYSQLI_REPORT_OFF);
 
-/* Attempt to connect to MySQL database */
+/* Attempt to connect to the database */
 
 $mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
-// Check connection
-if($mysqli === false){
+if ($mysqli->connect_errno) {
     die("ERROR: Could not connect. " . $mysqli->connect_error);
+}
+
+/*
+ * This application must only ever run against Oracle MySQL Community
+ * Server. mysqli happily speaks the wire protocol to MariaDB and other
+ * forks too, so the driver alone can't tell them apart -- checking
+ * @@version_comment (and the absence of "MariaDB" in VERSION()) is the
+ * standard way to positively identify the real Oracle build.
+ */
+$engineCheck = $mysqli->query("SELECT VERSION() AS v, @@version_comment AS c");
+$engineRow = $engineCheck ? $engineCheck->fetch_assoc() : null;
+if (!$engineRow || stripos($engineRow['v'], 'mariadb') !== false || stripos($engineRow['c'], 'mariadb') !== false) {
+    die("FATAL: This application requires Oracle MySQL Community Server 8.4 LTS. "
+        . "The connected server does not identify as MySQL (it may be MariaDB or another fork). Refusing to start.");
 }
 
 //-------------------------------------< connection method >----------
