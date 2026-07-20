@@ -8,6 +8,30 @@ $filesPath = "../files/";
 $uploadsPath = "../uploads/";
 $_SESSION['lang'] = $lang;
 
+// =================================================================================================| counter scope
+// /beaa/feedback/{counter_id}/ passes counter_id via router.php / .htaccess.
+// Absent or 0 => the unchanged global feedback page.
+$counterId = isset($_GET['counter_id']) ? (int) $_GET['counter_id'] : 0;
+$counter = null;
+if ($counterId > 0) {
+    $counter = getRow("SELECT counter_id, counter_name, counter_no, counter_zone,
+                        (SELECT zone_name FROM zones WHERE zone_id = counters.counter_zone) AS zone_name
+                        FROM counters WHERE counter_id = $counterId;");
+    if (!$counter) {
+        http_response_code(404);
+        header('Content-Type: text/html; charset=UTF-8');
+        $notFoundMsg = ($lang === 'ar') ? 'الطاولة المطلوبة غير موجودة.' : 'The requested counter does not exist.';
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>404</title></head>'
+           . '<body style="font-family:sans-serif;text-align:center;padding:60px;color:#555;">'
+           . '<h1 style="font-size:48px;margin-bottom:10px;">404</h1><p>' . htmlspecialchars($notFoundMsg) . '</p>'
+           . '</body></html>';
+        exit;
+    }
+}
+
+$pageTitle = 'feedback';
+$pageHeading = null; // set below, after $feedbackOpinion is loaded
+
 // =================================================================================================
 
 $dir = trim(getTextValue('dir', $lang));
@@ -25,6 +49,13 @@ $feedbackOpinion = getTextValue("feedbackOpinion", $lang);
 $yourRating = getTextValue("yourRating", $lang);
 $happy = getTextValue("happy", $lang);
 $unhappy = getTextValue("unhappy", $lang);
+
+if ($counter) {
+    $pageTitle = ($lang === 'ar') ? ('تقييم الطاولة ' . $counter['counter_name']) : ($counter['counter_name'] . ' Feedback');
+    $pageHeading = $pageTitle;
+} else {
+    $pageHeading = $feedbackOpinion;
+}
 
 if ($dir == 'ltr') {
     $logo = "../files/logos/moenv-logo-en.jpg";
@@ -48,7 +79,17 @@ $fbQuestions = getArrayAssoc(
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>feedback</title>
+    <?php if ($counter) {
+        // /beaa/feedback/{counter_id}/ has one extra path segment versus
+        // /beaa/feedback/, so the template's unchanged "../css/..." style
+        // relative links would otherwise resolve one level too shallow
+        // (/beaa/feedback/css/... instead of /beaa/css/...). Pin the base
+        // so every relative link resolves exactly as it does on the
+        // unmodified global page, without touching a single href/src.
+        ?>
+    <base href="<?php echo htmlspecialchars(BASE_URL . '/feedback/') ?>">
+    <?php } ?>
+    <title><?php echo htmlspecialchars($pageTitle) ?></title>
     <link href="../css/paper.bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <?php
     if ($dir == 'rtl') {
@@ -79,7 +120,7 @@ $fbQuestions = getArrayAssoc(
 
     <div class="corner-box-right">
         <h1 class="ribbon-left">
-            <strong class="ribbon-left-content pad-20-100"><?php echo $feedbackOpinion ?></strong>
+            <strong class="ribbon-left-content pad-20-100"><?php echo htmlspecialchars($pageHeading) ?></strong>
         </h1>
     </div>
 
@@ -87,6 +128,21 @@ $fbQuestions = getArrayAssoc(
         <div class="bg-white pad-3 sh-blue s-10 center-block round-10 pad-20">
             <img class="img-responsive" src="<?php echo $logo ?>" alt="">
         </div>
+
+        <?php if ($counter) { ?>
+        <div class="text-center pad-v-5 font-md text-gray">
+            <?php
+            $counterInfoParts = [$counter['counter_name']];
+            if ($counter['counter_no'] != $counter['counter_id']) {
+                $counterInfoParts[] = '#' . $counter['counter_no'];
+            }
+            if (!empty($counter['zone_name'])) {
+                $counterInfoParts[] = $counter['zone_name'];
+            }
+            echo htmlspecialchars(implode(' · ', $counterInfoParts));
+            ?>
+        </div>
+        <?php } ?>
 
         <div id="feedback-main" class="marg-v-50 text-left" style="display: block;">
             <?php
@@ -168,6 +224,7 @@ $fbQuestions = getArrayAssoc(
     <script src="../js/common.js" type="text/javascript"></script>
     <script type="text/javascript">
         var currentLang = "<?php echo $lang ?>";
+        var feedbackCounterId = <?php echo $counter ? (int) $counter['counter_id'] : 'null' ?>;
     </script>
     <script src="../js/feedback.js" type="text/javascript"></script>
 </body>

@@ -9,6 +9,7 @@
         <th ><?php echo getTextValue("directTransferCategory", $lang) ?></th>
         <th ><?php echo getTextValue("canPickTickets", $lang) ?></th>
         <th ><?php echo getTextValue("counterZone", $lang) ?></th>
+        <th>Feedback</th>
     <tr>
         <?php
 
@@ -40,6 +41,11 @@
             <td ><?php echo $dirCat ?>  </td>
             <td class="<?php echo $redBox ?>"><?php echo $isPicker ?>  </td>
             <td ><?php echo $row['zone_name'] ?>  </td>
+            <td class="single-line">
+                <?php $fbUrl = BASE_URL . '/feedback/' . $row['counter_id'] . '/'; ?>
+                <a href="<?php echo $fbUrl ?>" target="_blank" class="btn btn-xs btn-info" title="Open"><i class="glyphicon glyphicon-new-window"></i></a>
+                <button type="button" class="btn btn-xs btn-default" onclick="copyFeedbackLink('<?php echo $fbUrl ?>', this)" title="Copy"><i class="glyphicon glyphicon-copy"></i></button>
+            </td>
         <tr>
             <?php
         }

@@ -66,6 +66,9 @@ function sendFeedback() {
     ratings.forEach(function (v, i) {
         data['fb' + i] = v;
     });
+    if (typeof feedbackCounterId !== 'undefined' && feedbackCounterId) {
+        data.counter_id = feedbackCounterId;
+    }
 
     $.post('../api/feedback/set.php', data, function (resp) {
         if (String(resp).trim() === '1') {

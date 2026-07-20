@@ -128,6 +128,8 @@ CREATE TABLE IF NOT EXISTS countercategories (
   cc_counter INT NOT NULL,
   cc_category INT NOT NULL,
   cc_enabled TINYINT NOT NULL DEFAULT 1,
+  cc_requested_level INT NOT NULL DEFAULT 0,
+  cc_next_level INT NOT NULL DEFAULT 1,
   UNIQUE KEY uq_counter_category (cc_counter, cc_category),
   CONSTRAINT fk_cc_counter FOREIGN KEY (cc_counter) REFERENCES counters(counter_id),
   CONSTRAINT fk_cc_category FOREIGN KEY (cc_category) REFERENCES categories(category_id)
@@ -294,6 +296,18 @@ CREATE TABLE IF NOT EXISTS followups (
 
 CREATE TABLE IF NOT EXISTS feedback (
   feedback_id INT AUTO_INCREMENT PRIMARY KEY,
+  -- 'global' = submitted from /beaa/feedback/ (unchanged legacy behavior).
+  -- 'counter' = submitted from /beaa/feedback/{counter_id}/.
+  feedback_scope ENUM('global','counter') NOT NULL DEFAULT 'global',
+  -- NULL for global feedback. For counter feedback, references counters.counter_id
+  -- but is nullable and ON DELETE SET NULL so a hard-deleted counter never
+  -- deletes or reparents historical feedback rows; the snapshot columns below
+  -- preserve what the counter was called at submission time regardless.
+  counter_id INT NULL DEFAULT NULL,
+  counter_name_snapshot VARCHAR(80) NULL DEFAULT NULL,
+  counter_number_snapshot INT NULL DEFAULT NULL,
+  counter_zone_snapshot VARCHAR(80) NULL DEFAULT NULL,
+  feedback_language VARCHAR(5) NULL DEFAULT NULL,
   fb0 INT DEFAULT NULL,
   fb1 INT DEFAULT NULL,
   fb2 INT DEFAULT NULL,
@@ -302,7 +316,11 @@ CREATE TABLE IF NOT EXISTS feedback (
   fb5 INT DEFAULT NULL,
   feedback_score DECIMAL(4,2) DEFAULT NULL,
   feedback_note TEXT,
-  feedback_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  feedback_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_feedback_counter FOREIGN KEY (counter_id) REFERENCES counters(counter_id) ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX idx_feedback_scope_date (feedback_scope, feedback_date),
+  INDEX idx_feedback_counter_date (counter_id, feedback_date),
+  INDEX idx_feedback_date (feedback_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS extension_numbers (

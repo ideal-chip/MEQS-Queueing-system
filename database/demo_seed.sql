@@ -657,7 +657,8 @@ INSERT INTO audios (audio_id, audio_name, audio_path, audio_language, audio_gend
 ON DUPLICATE KEY UPDATE audio_name = VALUES(audio_name), audio_path = VALUES(audio_path);
 
 INSERT INTO displays (display_id, display_name, display_zone, display_updated) VALUES
-(1, 'Main Counter Display', 1, 0)
+(1, 'Main Counter Display', 1, 0),
+(2, 'Counter 2 Display', 1, 0)
 ON DUPLICATE KEY UPDATE display_name = VALUES(display_name), display_zone = VALUES(display_zone);
 
 INSERT INTO bigdisplays (display_id, display_number, display_name, display_zone, display_updated, display_type, goto, arrow_dir) VALUES
@@ -674,10 +675,12 @@ INSERT INTO subcategories (subcategory_id, subcategory_name, wait_time_days, pap
 (2, 'دفع فاتورة', 0, 'رقم الحساب', 2, 1)
 ON DUPLICATE KEY UPDATE subcategory_name = VALUES(subcategory_name), main_category_id = VALUES(main_category_id);
 
+-- counter_display is UNIQUE per counter in the admin UI's own validation
+-- (views/counters/process.php) -- each counter must own a distinct display.
 INSERT INTO counters (counter_id, counter_name, counter_no, counter_display, counter_audio, counter_zone, counter_active, current_clerk, direct_transfer_category, can_pick_tickets) VALUES
 (1, 'Counter 1', 1, 1, 1, 1, 0, 0, 0, 1),
-(2, 'Counter 2', 2, 1, 1, 1, 0, 0, 0, 1)
-ON DUPLICATE KEY UPDATE counter_name = VALUES(counter_name), counter_zone = VALUES(counter_zone);
+(2, 'Counter 2', 2, 2, 1, 1, 0, 0, 0, 1)
+ON DUPLICATE KEY UPDATE counter_name = VALUES(counter_name), counter_zone = VALUES(counter_zone), counter_display = VALUES(counter_display);
 
 INSERT INTO countercategories (cc_counter, cc_category, cc_enabled) VALUES
 (1, 1, 1),

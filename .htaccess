@@ -59,6 +59,13 @@
     RewriteCond %{REQUEST_URI} ^/bulkcall(.*)$
     RewriteCond %{REQUEST_URI} !^/beaa/
     RewriteRule ^bulkcall(.*)$ /beaa/bulkcall$1 [R=301,L]
+
+    # Per-counter feedback pages: /beaa/feedback/{counter_id}/ -- dynamic
+    # route, no per-counter file on disk. Canonical form has a trailing
+    # slash; the no-slash form redirects to it (same rule router.php uses
+    # for the PHP built-in server).
+    RewriteRule ^beaa/feedback/([0-9]+)$ /beaa/feedback/$1/ [R=302,L]
+    RewriteRule ^beaa/feedback/([0-9]+)/$ beaa/feedback/index.php?counter_id=$1 [L,QSA]
 </IfModule>
 
 # Security headers
