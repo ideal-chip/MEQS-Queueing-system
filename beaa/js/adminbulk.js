@@ -13,7 +13,7 @@ function updateDelay(direction) {
 
 function setDelay() {
     var value = parseInt($('#delayVal').text(), 10) || 0;
-    $.get('../api/update.php?type=bulkdelay&value=' + value, function (data) {
+    $.get('../api/update.php?id=1&type=bulkdelay&value=' + value, function (data) {
         if (data !== 0 && data !== '0') {
             var $btn = $('#bulkBtn');
             var original = $btn.html();
@@ -24,13 +24,13 @@ function setDelay() {
 }
 
 function setBulkStatus(status) {
-    $.get('../api/update.php?type=bulkstatus&status=' + status, function () {
+    $.get('../api/update.php?id=1&type=bulkstatus&status=' + status, function () {
         pollBulkStatus();
     });
 }
 
 function updateAll() {
-    $.get('../api/update.php?type=allbigdisplay', function () {
+    $.get('../api/update.php?id=1&type=allbigdisplay', function () {
         var $link = $('#recall-all .txt');
         var original = $link.text();
         $link.text(updateText);

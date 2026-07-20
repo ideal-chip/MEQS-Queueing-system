@@ -11,7 +11,11 @@ INSERT INTO settings (set_key, set_value) VALUES
 ('counterSwitchServices', '1'),
 ('counter_callDelaySeconds', '3'),
 ('counter_recallTimes', '3'),
-('displayType', 'tcp')
+('displayType', 'tcp'),
+('bulkDelay', '5'),
+('maxTransactions', '10'),
+('maxBulkNumber', '10'),
+('minimumCategoriesCount', '1')
 ON DUPLICATE KEY UPDATE set_value = VALUES(set_value);
 
 INSERT INTO zones (zone_id, zone_name, zone_desc) VALUES
@@ -727,3 +731,19 @@ INSERT INTO extension_numbers (extension_no, extension_name, extension_desc) VAL
 ('102', 'Customer Service', 'Customer service department'),
 ('103', 'Payments', 'Payments department')
 ON DUPLICATE KEY UPDATE extension_name = VALUES(extension_name);
+
+-- Additional followups spread across the last 10 days so date-range filters,
+-- charts and pagination on the reports/search admin pages have real data
+-- (not just the single 2-day-old demo row above) to render out of the box.
+INSERT INTO followups (serial_no, day_order_no, client_name, mobile_number, category_id, subcategory_id, extension_no, clerk_id, date_created, date_done, is_done) VALUES
+('DEMO-FU-101', 1, 'Demo Client 1', '0501234501', 1, 1, '101', 1, NOW(), NOW() + INTERVAL 1 DAY, 1),
+('DEMO-FU-102', 2, 'Demo Client 2', '0501234502', 1, 1, '101', 1, NOW(), NULL, 0),
+('DEMO-FU-103', 3, 'Demo Client 3', '0501234503', 2, 2, '102', 1, NOW(), NOW(), 1),
+('DEMO-FU-104', 1, 'Demo Client 4', '0501234504', 1, 1, '103', 1, NOW() - INTERVAL 1 DAY, NOW(), 1),
+('DEMO-FU-105', 2, 'Demo Client 5', '0501234505', 2, 2, '102', 1, NOW() - INTERVAL 1 DAY, NULL, 0),
+('DEMO-FU-106', 1, 'Demo Client 6', '0501234506', 1, 1, '101', 1, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 DAY, 1),
+('DEMO-FU-107', 2, 'Demo Client 7', '0501234507', 2, 2, '102', 1, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY, 1),
+('DEMO-FU-108', 1, 'Demo Client 8', '0501234508', 1, 1, '103', 1, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 4 DAY, 1),
+('DEMO-FU-109', 1, 'Demo Client 9', '0501234509', 2, 2, '101', 1, NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 5 DAY, 1),
+('DEMO-FU-110', 2, 'Demo Client 10', '0501234510', 1, 1, '102', 1, NOW() - INTERVAL 10 DAY, NULL, 0)
+ON DUPLICATE KEY UPDATE client_name = VALUES(client_name);

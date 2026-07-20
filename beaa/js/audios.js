@@ -5,7 +5,7 @@ $(document).ready(function () {
     $('#short-beep').on('click', function () {
         var $btn = $(this);
         var newValue = $btn.val() == 1 ? 0 : 1;
-        $.get('../api/update.php?type=shortaudio&value=' + newValue, function (data) {
+        $.get('../api/update.php?id=1&type=shortaudio&value=' + newValue, function (data) {
             if (data !== 0 && data !== '0') {
                 $btn.val(newValue);
                 if (newValue == 1) {

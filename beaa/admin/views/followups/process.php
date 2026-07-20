@@ -160,7 +160,7 @@ $categoriesList = getArrayAssoc("SELECT COUNT(main_category_id) AS 'size',
 //var_dump($categories);
 
 
-function GetPercenatage($avgDays, $waitTime, $totalDays, $br) {
+function GetPercenatage($avgDays, $waitTime, $totalDays, $br = 0) {
 //    $commonStyle = "";
 //    $styleLow = "style='background-color:lightblue;color:#555;width:100%;display:block;position:relative;text-align:right; padding-right:3px;'";
 //    $styleHigh = "style='background-color:lightcoral;color:white;width:100%;display:block;position:relative;text-align:right;padding-right:3px;'";

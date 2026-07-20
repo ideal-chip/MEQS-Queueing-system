@@ -105,6 +105,7 @@ $fbQuestions = getArrayAssoc(
                     </div>
                     <div class="col-md-3">
                         <select id="<?php echo $starId ?>" class="">
+                            <option value="" selected></option>
                             <option data-html="1" value="1">1</option>
                             <option data-html="2" value="2">2</option>
                             <option data-html="3" value="3">3</option>
