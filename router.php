@@ -14,6 +14,16 @@ $uri = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $docroot = __DIR__;
 $fsPath = $docroot . $uri;
 
+// REST API v1 (used by the Flutter app): every /beaa/api/v1/... request goes
+// through one front controller, which parses the remaining path itself.
+// Checked first since sub-paths are virtual (no matching files on disk).
+if (strpos($uri, '/beaa/api/v1/') === 0 || $uri === '/beaa/api/v1') {
+    $_SERVER['API_V1_PATH'] = substr($uri, strlen('/beaa/api/v1'));
+    chdir($docroot . '/beaa/api/v1');
+    require $docroot . '/beaa/api/v1/index.php';
+    exit;
+}
+
 // Apache's mod_dir auto-appends a trailing slash to directory requests so
 // relative asset links (../css/...) resolve correctly; the built-in server
 // does not, so do it here.
