@@ -25,6 +25,9 @@ class GeneralFeedbackController extends GetxController {
   void onInit() {
     super.onInit();
     loadForm();
+    // Re-fetch the questions (which the server returns already localized)
+    // whenever the user switches language on the Settings screen.
+    ever(settings.languageCode, (_) => loadForm());
   }
 
   Future<void> loadForm() async {
@@ -63,7 +66,7 @@ class GeneralFeedbackController extends GetxController {
     } on ApiException catch (e) {
       errorMessage.value = e.message;
       status.value = FeedbackFormStatus.ready;
-      Get.snackbar('Could not submit', e.message);
+      Get.snackbar('could_not_submit'.tr, e.message);
     }
   }
 

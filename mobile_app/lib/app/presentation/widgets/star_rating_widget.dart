@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/constants/app_defaults.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_palette.dart';
 
-/// A row of 5 tappable stars, matching the web kiosk's jquery-bar-rating
-/// "fontawesome-stars" theme: unrated = light grey outline, rated = gold
-/// fill up to the selected value.
+/// A row of 5 tappable stars. Selected stars fill with the brand gold and
+/// gain a soft glow, and pop in with a springy scale animation — matching the
+/// lively feel of the reference UI.
 class StarRatingWidget extends StatelessWidget {
   final int value; // 0-5
   final ValueChanged<int> onChanged;
@@ -14,25 +16,38 @@ class StarRatingWidget extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
-    this.size = 32,
+    this.size = 40,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (i) {
         final starIndex = i + 1;
         final filled = starIndex <= value;
-        return InkWell(
-          borderRadius: BorderRadius.circular(24),
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => onChanged(starIndex),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Icon(
-              filled ? Icons.star_rounded : Icons.star_outline_rounded,
-              size: size,
-              color: filled ? AppDefaults.starColor : Colors.grey.shade300,
+            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 4.h),
+            child: AnimatedScale(
+              scale: filled ? 1.0 : 0.82,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutBack,
+              child: Icon(
+                filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                size: size.sp,
+                color: filled ? AppColors.gold : context.tones.fg3,
+                shadows: filled
+                    ? [
+                        const Shadow(
+                          color: AppColors.goldGlow,
+                          blurRadius: 16,
+                        ),
+                      ]
+                    : null,
+              ),
             ),
           ),
         );

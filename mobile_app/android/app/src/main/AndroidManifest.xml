@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for the app to reach the iDEAL-Q REST API. Flutter only adds
+         this to the debug/profile manifests, so release builds silently fail
+         all networking (SocketException / EPERM) without it here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="meqs_feedback"
+        android:label="Ideal Feedback"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

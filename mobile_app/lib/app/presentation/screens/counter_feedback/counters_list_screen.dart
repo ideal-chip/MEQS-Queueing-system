@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/app_widgets.dart';
 import '../../../data/models/counter_model.dart';
 import '../../../data/repositories/feedback_repository.dart';
 import '../../controllers/counter_feedback_controller.dart';
@@ -9,9 +14,7 @@ import '../../controllers/settings_controller.dart';
 import 'counter_feedback_screen.dart';
 
 /// Lists every counter available for feedback, with a live search field
-/// (by name, number, or zone) at the top. Tapping a counter opens its own
-/// feedback form -- the mobile equivalent of visiting
-/// /beaa/feedback/{counter_id}/ on the web.
+/// (by name, number, or zone). Tapping a counter opens its own feedback form.
 class CountersListScreen extends StatelessWidget {
   const CountersListScreen({super.key});
 
@@ -21,107 +24,231 @@ class CountersListScreen extends StatelessWidget {
     final settings = Get.find<SettingsController>();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Obx(() => Text(settings.counterFeedbackTitle.value)),
+        title: Obx(() {
+          final custom = settings.counterFeedbackTitle.value;
+          return Text(custom.isEmpty ? 'counter_title'.tr : custom);
+        }),
       ),
-      body: Column(
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
+              child: TextField(
+                onChanged: controller.updateSearch,
+                decoration: InputDecoration(
+                  hintText: 'search_counters'.tr,
+                  prefixIcon: const Icon(Icons.search_rounded),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Obx(() {
+                switch (controller.status.value) {
+                  case CountersListStatus.loading:
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation(AppColors.blue),
+                      ),
+                    );
+                  case CountersListStatus.error:
+                    return _CountersError(
+                      message: controller.errorMessage.value,
+                      onRetry: controller.loadCounters,
+                    );
+                  case CountersListStatus.ready:
+                    final counters = controller.filteredCounters;
+                    if (counters.isEmpty) {
+                      return Center(
+                        child: Text(
+                          controller.searchQuery.value.isEmpty
+                              ? 'no_counters'.tr
+                              : 'no_counters_match'.tr,
+                          style: TextStyle(color: context.tones.fg2),
+                        ),
+                      );
+                    }
+                    return _CountersGrid(counters: counters, onRefresh: controller.loadCounters);
+                }
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CountersGrid extends StatelessWidget {
+  final List<CounterModel> counters;
+  final Future<void> Function() onRefresh;
+
+  const _CountersGrid({required this.counters, required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    final columns = context.gridColumns;
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.blue,
+      backgroundColor: AppColors.bgLight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final gap = 14.w;
+          final maxW = constraints.maxWidth.clamp(0, context.contentMaxWidth);
+          final itemW = columns == 2 ? (maxW - gap) / 2 : maxW.toDouble();
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 24.h),
+            child: Center(
+              child: ConstrainedBox(
+                constraints:
+                    BoxConstraints(maxWidth: context.contentMaxWidth),
+                child: Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (int i = 0; i < counters.length; i++)
+                      SizedBox(
+                        width: itemW,
+                        child: SlideFadeIn(
+                          delay: Duration(milliseconds: 60 * i),
+                          child: _CounterCard(counter: counters[i]),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CounterCard extends StatelessWidget {
+  final CounterModel counter;
+
+  const _CounterCard({required this.counter});
+
+  void _open() {
+    // A fresh controller per counter — delete any previous one first so
+    // switching between counters never shows stale ratings.
+    if (Get.isRegistered<CounterFeedbackController>()) {
+      Get.delete<CounterFeedbackController>();
+    }
+    Get.put(
+      CounterFeedbackController(
+        repository: Get.find<FeedbackRepository>(),
+        settings: Get.find<SettingsController>(),
+        counterId: counter.counterId,
+      ),
+    );
+    Get.to(() => const CounterFeedbackScreen(), transition: Transition.rightToLeft);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      onTap: _open,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              onChanged: controller.updateSearch,
-              decoration: const InputDecoration(
-                hintText: 'Search counters by name, number, or zone',
-                prefixIcon: Icon(Icons.search_rounded),
+          Container(
+            width: 46.r,
+            height: 46.r,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [AppColors.blue, AppColors.blueDark],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.blue.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: Text(
+              counter.counterNumber.toString(),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 16.sp,
               ),
             ),
           ),
+          SizedBox(width: 14.w),
           Expanded(
-            child: Obx(() {
-              switch (controller.status.value) {
-                case CountersListStatus.loading:
-                  return const Center(child: CircularProgressIndicator());
-                case CountersListStatus.error:
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
-                          Text(
-                            controller.errorMessage.value,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: controller.loadCounters,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  counter.counterName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15.sp,
+                    color: context.tones.fg,
+                  ),
+                ),
+                if ((counter.zoneName ?? '').isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    counter.zoneName!,
+                    style: TextStyle(
+                      color: context.tones.fg2,
+                      fontSize: 12.5.sp,
                     ),
-                  );
-                case CountersListStatus.ready:
-                  final counters = controller.filteredCounters;
-                  if (counters.isEmpty) {
-                    return const Center(child: Text('No counters found.'));
-                  }
-                  return RefreshIndicator(
-                    onRefresh: controller.loadCounters,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: counters.length,
-                      itemBuilder: (context, i) => _CounterTile(counter: counters[i]),
-                    ),
-                  );
-              }
-            }),
+                  ),
+                ],
+              ],
+            ),
           ),
+          Icon(Icons.chevron_right_rounded,
+              color: context.tones.fg3, size: 24.sp),
         ],
       ),
     );
   }
 }
 
-class _CounterTile extends StatelessWidget {
-  final CounterModel counter;
+class _CountersError extends StatelessWidget {
+  final String message;
+  final Future<void> Function() onRetry;
 
-  const _CounterTile({required this.counter});
+  const _CountersError({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.secondary;
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: CircleAvatar(
-          backgroundColor: secondary.withValues(alpha: 0.12),
-          child: Text(
-            counter.counterNumber.toString(),
-            style: TextStyle(color: secondary, fontWeight: FontWeight.w700),
-          ),
-        ),
-        title: Text(counter.counterName, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(counter.zoneName ?? ''),
-        trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: () {
-          // A fresh controller per counter -- delete any previous one first
-          // so switching between counters never shows stale ratings.
-          if (Get.isRegistered<CounterFeedbackController>()) {
-            Get.delete<CounterFeedbackController>();
-          }
-          Get.put(
-            CounterFeedbackController(
-              repository: Get.find<FeedbackRepository>(),
-              settings: Get.find<SettingsController>(),
-              counterId: counter.counterId,
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off_rounded, size: 64.sp, color: context.tones.fg3),
+            SizedBox(height: 16.h),
+            Text(
+              message.isEmpty ? 'something_wrong'.tr : message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: context.tones.fg2),
             ),
-          );
-          Get.to(() => const CounterFeedbackScreen());
-        },
+            SizedBox(height: 22.h),
+            SizedBox(
+              width: 200.w,
+              child: GlowButton(
+                label: 'retry'.tr,
+                icon: Icons.refresh_rounded,
+                onTap: onRetry,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -10,4 +10,5 @@ class StorageKeys {
   static const String generalFeedbackTitle = 'settings.general_feedback_title';
   static const String counterFeedbackTitle = 'settings.counter_feedback_title';
   static const String languageCode = 'settings.language_code';
+  static const String themeMode = 'settings.theme_mode';
 }
