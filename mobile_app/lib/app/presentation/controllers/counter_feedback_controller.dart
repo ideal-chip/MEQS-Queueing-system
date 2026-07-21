@@ -33,6 +33,7 @@ class CounterFeedbackController extends GetxController {
   void onInit() {
     super.onInit();
     loadForm();
+    ever(settings.languageCode, (_) => loadForm());
   }
 
   Future<void> loadForm() async {
@@ -81,7 +82,7 @@ class CounterFeedbackController extends GetxController {
     } on ApiException catch (e) {
       errorMessage.value = e.message;
       status.value = FeedbackFormStatus.ready;
-      Get.snackbar('Could not submit', e.message);
+      Get.snackbar('could_not_submit'.tr, e.message);
     }
   }
 

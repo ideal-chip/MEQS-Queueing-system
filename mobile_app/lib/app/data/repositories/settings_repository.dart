@@ -40,6 +40,9 @@ class SettingsRepository {
   String get languageCode =>
       _box.read<String>(StorageKeys.languageCode) ?? AppDefaults.languageCode;
 
+  String get themeMode =>
+      _box.read<String>(StorageKeys.themeMode) ?? AppDefaults.themeMode;
+
   Future<void> setApiBaseUrl(String value) =>
       _box.write(StorageKeys.apiBaseUrl, value.trim());
 
@@ -64,6 +67,9 @@ class SettingsRepository {
   Future<void> setLanguageCode(String value) =>
       _box.write(StorageKeys.languageCode, value);
 
+  Future<void> setThemeMode(String value) =>
+      _box.write(StorageKeys.themeMode, value);
+
   Future<void> resetToDefaults() async {
     await _box.remove(StorageKeys.apiBaseUrl);
     await _box.remove(StorageKeys.primaryColor);
@@ -73,6 +79,7 @@ class SettingsRepository {
     await _box.remove(StorageKeys.generalFeedbackTitle);
     await _box.remove(StorageKeys.counterFeedbackTitle);
     await _box.remove(StorageKeys.languageCode);
+    await _box.remove(StorageKeys.themeMode);
   }
 
   static Color? _colorFromHex(String? hex) {

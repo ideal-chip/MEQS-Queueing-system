@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_palette.dart';
+import '../../core/utils/responsive.dart';
+import '../../core/widgets/app_widgets.dart';
 import '../../data/models/feedback_question_model.dart';
 import '../controllers/feedback_form_status.dart';
 import 'star_rating_widget.dart';
 
-/// The question list + submit button + "thank you" state, shared by both
-/// the General Feedback and Counter Feedback screens so the two stay
-/// visually and behaviorally identical (same questions, same stars, same
-/// flow) -- only the data source differs between them.
+/// The question list + submit + thank-you / error states, shared by the
+/// General and Counter feedback screens so both look and behave identically.
+/// Fully localized (`.tr`) and responsive: one column on a phone, two columns
+/// on a landscape tablet, with the reading column capped on wide screens.
 class FeedbackFormBody extends StatelessWidget {
   final List<FeedbackQuestionModel> questions;
   final FeedbackFormStatus status;
@@ -36,14 +42,15 @@ class FeedbackFormBody extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (status) {
       case FeedbackFormStatus.loading:
-        return const Center(child: CircularProgressIndicator());
-
+        return const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(AppColors.blue),
+          ),
+        );
       case FeedbackFormStatus.error:
         return _ErrorView(message: errorMessage, onRetry: onRetry);
-
       case FeedbackFormStatus.submitted:
-        return _ThankYouView(onReset: onReset);
-
+        return _ThankYouView(average: averageScore, onReset: onReset);
       case FeedbackFormStatus.ready:
       case FeedbackFormStatus.submitting:
         return _QuestionsView(
@@ -74,84 +81,185 @@ class _QuestionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      children: [
-        for (int i = 0; i < questions.length; i++)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+    final columns = context.gridColumns;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxW = constraints.maxWidth.clamp(0, context.contentMaxWidth);
+        final gap = 14.w;
+        final itemW = columns == 2 ? (maxW - gap) / 2 : maxW.toDouble();
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: context.contentMaxWidth),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    questions[i].label,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      for (int i = 0; i < questions.length; i++)
+                        SizedBox(
+                          width: itemW,
+                          child: SlideFadeIn(
+                            delay: Duration(milliseconds: 80 * i),
+                            child: _QuestionCard(
+                              index: i,
+                              question: questions[i],
+                              onRatingChanged: onRatingChanged,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  StarRatingWidget(
-                    value: questions[i].rating,
-                    onChanged: (v) => onRatingChanged(i, v),
+                  SizedBox(height: 24.h),
+                  GlowButton(
+                    label: submitting ? 'submitting'.tr : 'submit'.tr,
+                    icon: submitting ? null : Icons.send_rounded,
+                    isLoading: submitting,
+                    onTap: allRated && !submitting ? onSubmit : null,
                   ),
+                  if (!allRated && questions.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Text(
+                      'rate_all_hint'.tr,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: context.tones.fg2,
+                        fontSize: 13.sp,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: allRated && !submitting ? onSubmit : null,
-            child: submitting
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
-                  )
-                : const Text('Submit'),
+        );
+      },
+    );
+  }
+}
+
+class _QuestionCard extends StatelessWidget {
+  final int index;
+  final FeedbackQuestionModel question;
+  final void Function(int, int) onRatingChanged;
+
+  const _QuestionCard({
+    required this.index,
+    required this.question,
+    required this.onRatingChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            question.label,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: context.tones.fg,
+            ),
           ),
-        ),
-        if (!allRated && questions.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          const Text(
-            'Please rate all questions before submitting.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
+          SizedBox(height: 12.h),
+          Center(
+            child: StarRatingWidget(
+              value: question.rating,
+              onChanged: (v) => onRatingChanged(index, v),
+            ),
           ),
         ],
-      ],
+      ),
     );
   }
 }
 
 class _ThankYouView extends StatelessWidget {
+  final double average;
   final VoidCallback onReset;
 
-  const _ThankYouView({required this.onReset});
+  const _ThankYouView({required this.average, required this.onReset});
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.secondary;
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_rounded, size: 84, color: accent),
-            const SizedBox(height: 20),
-            const Text(
-              'Thank you!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.elasticOut,
+              builder: (_, v, _) => Transform.scale(
+                scale: v,
+                child: Container(
+                  width: 108.r,
+                  height: 108.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const RadialGradient(
+                      colors: [AppColors.blue, AppColors.blueDark],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.blue.withValues(alpha: 0.45),
+                        blurRadius: 30,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Icon(Icons.check_rounded,
+                      size: 64.sp, color: Colors.white),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Your feedback has been submitted.',
+            SizedBox(height: 26.h),
+            Text(
+              'thank_you'.tr,
+              style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.w800),
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              'feedback_submitted'.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: context.tones.fg2, fontSize: 14.sp),
             ),
-            const SizedBox(height: 24),
-            OutlinedButton(onPressed: onReset, child: const Text('Rate again')),
+            if (average > 0) ...[
+              SizedBox(height: 18.h),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star_rounded, color: AppColors.gold, size: 22.sp),
+                  SizedBox(width: 6.w),
+                  Text(
+                    '${'average'.tr}: ${average.toStringAsFixed(1)} / 5',
+                    style: TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            SizedBox(height: 30.h),
+            SizedBox(
+              width: 220.w,
+              child: GlowButton(
+                label: 'rate_again'.tr,
+                icon: Icons.refresh_rounded,
+                color: AppColors.gold,
+                onTap: onReset,
+              ),
+            ),
           ],
         ),
       ),
@@ -168,20 +276,28 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
+            Icon(Icons.wifi_off_rounded,
+                size: 64.sp, color: context.tones.fg3),
+            SizedBox(height: 16.h),
             Text(
-              message.isEmpty ? 'Something went wrong.' : message,
+              message.isEmpty ? 'something_wrong'.tr : message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: context.tones.fg2, fontSize: 14.sp),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+            SizedBox(height: 22.h),
+            SizedBox(
+              width: 200.w,
+              child: GlowButton(
+                label: 'retry'.tr,
+                icon: Icons.refresh_rounded,
+                onTap: onRetry,
+              ),
+            ),
           ],
         ),
       ),

@@ -20,6 +20,7 @@ class SettingsController extends GetxController {
   final generalFeedbackTitle = ''.obs;
   final counterFeedbackTitle = ''.obs;
   final languageCode = ''.obs;
+  final themeMode = ''.obs; // 'dark' | 'light'
 
   @override
   void onInit() {
@@ -36,6 +37,17 @@ class SettingsController extends GetxController {
     generalFeedbackTitle.value = repository.generalFeedbackTitle;
     counterFeedbackTitle.value = repository.counterFeedbackTitle;
     languageCode.value = repository.languageCode;
+    themeMode.value = repository.themeMode;
+  }
+
+  bool get isDarkMode => themeMode.value != 'light';
+
+  /// Switches between the dark (default) and light theme. Persisted and, since
+  /// [themeMode] is reactive, applied app-wide instantly via [GetMaterialApp].
+  Future<void> setThemeMode(String mode) async {
+    if (themeMode.value == mode) return;
+    await repository.setThemeMode(mode);
+    themeMode.value = mode;
   }
 
   Future<void> updateApiBaseUrl(String value) async {
@@ -76,6 +88,18 @@ class SettingsController extends GetxController {
   Future<void> updateLanguageCode(String value) async {
     await repository.setLanguageCode(value);
     languageCode.value = value;
+  }
+
+  /// Switches the whole app between Arabic and English: persists the choice,
+  /// flips the GetX locale (which re-runs every `.tr` and toggles RTL/LTR via
+  /// the Global localization delegates), and — because [languageCode] is
+  /// reactive — makes the feedback controllers re-fetch their (server-side
+  /// localized) question text via their `ever(...)` listeners.
+  Future<void> setLanguage(String code) async {
+    if (languageCode.value == code) return;
+    await repository.setLanguageCode(code);
+    languageCode.value = code;
+    Get.updateLocale(Locale(code));
   }
 
   Future<void> resetToDefaults() async {

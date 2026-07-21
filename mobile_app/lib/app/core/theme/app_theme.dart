@@ -1,74 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/repositories/settings_repository.dart';
+import 'app_colors.dart';
 
-/// Builds a Material 3 [ThemeData] from the user's Settings (or the web
-/// app's own default palette if nothing has been customized yet). Called
-/// fresh whenever Settings change, via the reactive theme controller.
+/// Builds the app's [ThemeData] for a given [brightness]. Typography is
+/// locale-aware — Cairo for Arabic, Poppins for English. The accent colour
+/// comes from Settings (defaults to the iDEAL-Q brand blue). Both the dark
+/// (default) and light variants share the same brand colours; only the
+/// neutrals differ.
 class AppTheme {
   AppTheme._();
 
-  static ThemeData build(SettingsRepository settings) {
-    final primary = settings.primaryColor;
-    final secondary = settings.secondaryColor;
-    final accent = settings.accentColor;
+  static ThemeData build(
+    SettingsRepository settings,
+    Locale locale,
+    Brightness brightness,
+  ) {
+    final isDark = brightness == Brightness.dark;
+    final primary = settings.primaryColor; // brand blue by default
+    final accent = settings.accentColor; // brand gold by default
+
+    final base = ThemeData(brightness: brightness, useMaterial3: true);
+    final isArabic = locale.languageCode == 'ar';
+    final fg = isDark ? AppColors.textPrimary : AppColors.textPrimaryL;
+    final textTheme = (isArabic
+            ? GoogleFonts.cairoTextTheme(base.textTheme)
+            : GoogleFonts.poppinsTextTheme(base.textTheme))
+        .apply(bodyColor: fg, displayColor: fg);
 
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: secondary,
-      primary: secondary,
+      seedColor: primary,
+      brightness: brightness,
+      primary: primary,
       secondary: accent,
-      brightness: Brightness.light,
+      surface: isDark ? AppColors.bgMid : AppColors.surfaceL,
     );
 
-    return ThemeData(
-      useMaterial3: true,
+    return base.copyWith(
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+      scaffoldBackgroundColor:
+          isDark ? AppColors.bgDeep : AppColors.bgDeepL,
+      textTheme: textTheme,
+      primaryColor: primary,
       appBarTheme: AppBarTheme(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: fg,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: secondary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          elevation: 0,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        margin: const EdgeInsets.symmetric(vertical: 8),
+        titleTextStyle: (isArabic ? GoogleFonts.cairo() : GoogleFonts.poppins())
+            .copyWith(color: fg, fontSize: 19, fontWeight: FontWeight.w700),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: isDark
+            ? AppColors.bgLight.withValues(alpha: 0.6)
+            : AppColors.fieldFillL,
+        hintStyle: TextStyle(
+            color: isDark ? AppColors.textMuted : AppColors.textMutedL),
+        prefixIconColor:
+            isDark ? AppColors.textSecondary : AppColors.textSecondaryL,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: isDark ? AppColors.cardBorder : AppColors.cardBorderL,
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.blue, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: secondary,
-        unselectedItemColor: Colors.grey.shade400,
-        type: BottomNavigationBarType.fixed,
-        elevation: 12,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor:
+            isDark ? AppColors.surfaceSolid : AppColors.textPrimaryL,
+        contentTextStyle: const TextStyle(color: Colors.white),
       ),
-      fontFamily: 'Roboto',
+      dividerColor: isDark ? AppColors.cardBorder : AppColors.cardBorderL,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 }

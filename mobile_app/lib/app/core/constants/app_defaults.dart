@@ -1,32 +1,35 @@
 import 'package:flutter/material.dart';
 
-/// Default values used the first time the app runs, and whenever the user
-/// taps "Reset to defaults" on the Settings screen. Colors are pulled
-/// directly from the web app's own stylesheets (beaa/css/common.css,
-/// beaa/css/feedback.css, the jquery-bar-rating "fontawesome-stars" theme)
-/// so the app matches the web kiosk out of the box.
+import '../theme/app_colors.dart';
+
+/// Default values used on first run and on "Reset to defaults". The on-screen
+/// titles default to empty, which makes each screen fall back to its localized
+/// string (`*_title`.tr) — so the app is fully Arabic/English out of the box.
+/// A user can still type a fixed custom title in Settings to override.
 class AppDefaults {
   AppDefaults._();
 
-  /// Change this to your server's real address if it differs from the demo
-  /// machine. Overridable at runtime from the Settings screen -- nothing
-  /// else in the app hardcodes a host.
+  /// Server address. Overridable at runtime from the Settings screen.
   static const String apiBaseUrl = 'http://192.168.1.41:8000/beaa/api/v1';
 
-  // beaa/css/common.css: .bg-blue-deep (navbar), a friendlier mid blue for
-  // buttons/links, and the gold used for the star-rating "active" color.
-  static const Color primaryColor = Color(0xFF2C3E50); // bg-blue-deep
-  static const Color secondaryColor = Color(0xFF3498DB); // btn-primary blue
-  static const Color accentColor = Color(0xFFF1C40F); // bg-yellow-heavy / star gold
-  static const Color starColor = Color(0xFFEDB867); // br-theme-fontawesome-stars active
-  static const Color successColor = Color(0xFF27AE60);
-  static const Color dangerColor = Color(0xFFE74C3C);
-  static const Color backgroundColor = Color(0xFFF5F7FA);
+  // Brand palette (iDEAL-Q logo): blue primary, gold accent, on deep navy.
+  static const Color primaryColor = AppColors.blue;
+  static const Color secondaryColor = AppColors.blueLight;
+  static const Color accentColor = AppColors.gold;
+  static const Color starColor = AppColors.gold;
+  static const Color successColor = AppColors.success;
+  static const Color dangerColor = AppColors.error;
+  static const Color backgroundColor = AppColors.bgDeep;
 
-  static const String appTitle = 'iDEAL-Q Feedback';
-  static const String generalFeedbackTitle = 'Rate your experience';
-  static const String counterFeedbackTitle = 'Counter Feedback';
-  static const String settingsTitle = 'Settings';
+  // Empty => screens use the localized default title.
+  static const String appTitle = '';
+  static const String generalFeedbackTitle = '';
+  static const String counterFeedbackTitle = '';
+  static const String settingsTitle = '';
 
-  static const String languageCode = 'en';
+  /// Arabic is the default language (Ministry of Environment requirement).
+  static const String languageCode = 'ar';
+
+  /// Dark is the default theme ('dark' | 'light').
+  static const String themeMode = 'dark';
 }
