@@ -107,7 +107,10 @@ if (count($errorList) > 0) {
 </form>
 
 <?php if ($editmode && $id > 0) {
-    $fbUrl = BASE_URL . '/feedback/' . $id . '/';
+    $feedbackBase = defined('BASE_URL')
+        ? BASE_URL
+        : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']);
+    $fbUrl = $feedbackBase . '/feedback/' . $id . '/';
     ?>
 <div class="s-70 well well-sm marg-v-20">
     <div class="font-bold marg-5">Counter Feedback Link</div>

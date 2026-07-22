@@ -17,11 +17,19 @@ $fsPath = $docroot . $uri;
 // REST API v1 (used by the Flutter app): every /beaa/api/v1/... request goes
 // through one front controller, which parses the remaining path itself.
 // Checked first since sub-paths are virtual (no matching files on disk).
-if (strpos($uri, '/beaa/api/v1/') === 0 || $uri === '/beaa/api/v1') {
-    $_SERVER['API_V1_PATH'] = substr($uri, strlen('/beaa/api/v1'));
-    chdir($docroot . '/beaa/api/v1');
-    require $docroot . '/beaa/api/v1/index.php';
-    exit;
+foreach (array('/beaa/api/v1', '/api/v1') as $apiPrefix) {
+    if (strpos($uri, $apiPrefix . '/') === 0 || $uri === $apiPrefix) {
+        $apiPath = substr($uri, strlen($apiPrefix));
+        if ($apiPath === '/index.php') {
+            $apiPath = '';
+        } elseif (strpos($apiPath, '/index.php/') === 0) {
+            $apiPath = substr($apiPath, strlen('/index.php'));
+        }
+        $_SERVER['API_V1_PATH'] = $apiPath;
+        chdir($docroot . '/beaa/api/v1');
+        require $docroot . '/beaa/api/v1/index.php';
+        exit;
+    }
 }
 
 // Apache's mod_dir auto-appends a trailing slash to directory requests so
@@ -53,6 +61,12 @@ if (preg_match('#^/beaa/feedback/(\d+)/$#', $uri, $m)) {
     // directory (so its "../xyz.php" relative includes resolve); that only
     // happens for files it serves directly, not ones we require() here
     // ourselves, so it has to be done explicitly.
+    chdir($docroot . '/beaa/feedback');
+    require $docroot . '/beaa/feedback/index.php';
+    exit;
+}
+if (preg_match('#^/beaa/feedback/counter_id=(\d+)/?$#', $uri, $m)) {
+    $_GET['counter_id'] = $m[1];
     chdir($docroot . '/beaa/feedback');
     require $docroot . '/beaa/feedback/index.php';
     exit;

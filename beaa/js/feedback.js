@@ -75,6 +75,10 @@ function sendFeedback() {
             $('#feedback-main').hide();
             $('#feedback-note').removeClass('animated fadeIn').show()
                 .addClass('animated fadeIn');
+            clearRating();
+            $('#feedback-note').delay(1500).fadeOut('normal', function () {
+                $('#feedback-main').fadeIn();
+            });
         }
     });
 }

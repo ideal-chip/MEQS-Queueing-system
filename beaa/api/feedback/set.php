@@ -4,6 +4,7 @@ error_reporting(0);
 require_once("../../language.php");
 
 global $mysqli;
+@$mysqli->set_charset('utf8');
 
 $fb = array();
 for ($i = 0; $i < 5; $i++) {
@@ -64,7 +65,7 @@ if ($counterId > 0) {
 $stmt = $mysqli->prepare(
     "INSERT INTO feedback
         (feedback_scope, counter_id, counter_name_snapshot, counter_number_snapshot, counter_zone_snapshot,
-         feedback_language, fb0, fb1, fb2, fb3, fb4, feedback_score, feedback_note, feedback_date)
+         feedback_language, fb1, fb2, fb3, fb4, fb5, feedback_score, feedback_note, feedback_date)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
 );
 $stmt->bind_param(

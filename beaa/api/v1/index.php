@@ -22,6 +22,7 @@ error_reporting(0);
 require_once __DIR__ . '/../../language.php';
 
 global $mysqli;
+@$mysqli->set_charset('utf8');
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -159,7 +160,7 @@ function submitFeedback($mysqli, $counterId, $body) {
     $stmt = $mysqli->prepare(
         "INSERT INTO feedback
             (feedback_scope, counter_id, counter_name_snapshot, counter_number_snapshot, counter_zone_snapshot,
-             feedback_language, fb0, fb1, fb2, fb3, fb4, feedback_score, feedback_note, feedback_date)
+             feedback_language, fb1, fb2, fb3, fb4, fb5, feedback_score, feedback_note, feedback_date)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
     );
     $stmt->bind_param(
@@ -186,14 +187,14 @@ function submitFeedback($mysqli, $counterId, $body) {
 
 //====================================================================  | routing
 
-$path = $_SERVER['API_V1_PATH'] ?? '';
+$path = $_SERVER['API_V1_PATH'] ?? ($_SERVER['PATH_INFO'] ?? '');
 
 // Apache reaches this front controller through mod_rewrite, while the PHP
 // development router sets API_V1_PATH explicitly. Derive the same value from
 // REQUEST_URI under Apache so both /api/v1 and /beaa/api/v1 behave identically.
 if ($path === '') {
     $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-    foreach (array('/beaa/api/v1', '/api/v1') as $apiPrefix) {
+    foreach (array('/beaa/api/v1/index.php', '/api/v1/index.php', '/beaa/api/v1', '/api/v1') as $apiPrefix) {
         if ($requestPath === $apiPrefix || strpos($requestPath, $apiPrefix . '/') === 0) {
             $path = substr($requestPath, strlen($apiPrefix));
             break;
@@ -244,7 +245,9 @@ if ($method === 'POST' && preg_match('#^/counters/(\d+)/feedback/submissions$#',
 if ($method === 'GET' && $path === '/counters') {
     $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $base = $protocol . '://' . $host . '/beaa';
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/beaa/api/v1/index.php';
+    $appPath = preg_replace('#/api/v1(?:/index\.php)?$#', '', $scriptName);
+    $base = $protocol . '://' . $host . rtrim($appPath, '/');
 
     $rows = $mysqli->query(
         "SELECT c.counter_id, c.counter_name, c.counter_no, c.counter_active, c.counter_zone,
@@ -277,6 +280,9 @@ function requireAdmin() {
     }
     if (empty($_SESSION['username'])) {
         apiError(401, 'unauthorized', 'Admin login required.');
+    }
+    if (empty($_SESSION['userpriv']) || !($_SESSION['userpriv'] & 1)) {
+        apiError(403, 'forbidden', 'Feedback report permission is required.');
     }
 }
 
@@ -314,7 +320,7 @@ if ($method === 'GET' && $path === '/admin/feedback/submissions') {
 
     $stmt = $mysqli->prepare(
         "SELECT feedback_id, feedback_scope, counter_id, counter_name_snapshot, feedback_language,
-                fb0, fb1, fb2, fb3, fb4, feedback_score, feedback_note, feedback_date
+                fb1, fb2, fb3, fb4, fb5, feedback_score, feedback_note, feedback_date
          FROM feedback WHERE $where ORDER BY feedback_date DESC LIMIT ? OFFSET ?"
     );
     $stmt->bind_param('ii', $perPage, $offset);

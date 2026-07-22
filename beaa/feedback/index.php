@@ -12,6 +12,12 @@ $_SESSION['lang'] = $lang;
 // /beaa/feedback/{counter_id}/ passes counter_id via router.php / .htaccess.
 // Absent or 0 => the unchanged global feedback page.
 $counterId = isset($_GET['counter_id']) ? (int) $_GET['counter_id'] : 0;
+if ($counterId <= 0) {
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if (preg_match('#/feedback/(?:counter_id=)?([0-9]+)/?$#', $requestPath, $counterMatch)) {
+        $counterId = (int) $counterMatch[1];
+    }
+}
 $counter = null;
 if ($counterId > 0) {
     $counter = getRow("SELECT counter_id, counter_name, counter_no, counter_zone,
@@ -57,6 +63,11 @@ if ($counter) {
     $pageHeading = $feedbackOpinion;
 }
 
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$feedbackBaseUrl = defined('BASE_URL')
+    ? BASE_URL . '/feedback/'
+    : $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/feedback/';
+
 if ($dir == 'ltr') {
     $logo = "../files/logos/moenv-logo-en.jpg";
 } else {
@@ -87,7 +98,7 @@ $fbQuestions = getArrayAssoc(
         // so every relative link resolves exactly as it does on the
         // unmodified global page, without touching a single href/src.
         ?>
-    <base href="<?php echo htmlspecialchars(BASE_URL . '/feedback/') ?>">
+    <base href="<?php echo htmlspecialchars($feedbackBaseUrl) ?>">
     <?php } ?>
     <title><?php echo htmlspecialchars($pageTitle) ?></title>
     <link href="../css/paper.bootstrap.min.css" rel="stylesheet" type="text/css"/>

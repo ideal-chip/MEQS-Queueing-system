@@ -42,5 +42,6 @@ include_once $view . 'process.php';
         <?php include_once './common/footer.php'; ?>
 
         <?php include_once './common/foot_scripts.php'; ?>
+        <script src="../js/counter-feedback-link.js" type="text/javascript"></script>
     </body>
 </html>

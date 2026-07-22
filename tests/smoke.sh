@@ -63,6 +63,7 @@ if command -v curl >/dev/null 2>&1; then
   check_http "admin login page" "$BASE_URL/beaa/admin/account/login.php" "200"
   check_http "counter page" "$BASE_URL/beaa/counter/" "200"
   check_http "REST API v1 short path" "$BASE_URL/api/v1/feedback/form?language=ar" "200"
+  check_http "REST API v1 direct script path" "$BASE_URL/api/v1/index.php/feedback/form?language=ar" "200"
   check_http "REST API v1 canonical path" "$BASE_URL/beaa/api/v1/feedback/form?language=ar" "200"
   check_post_body "counter login API" "$BASE_URL/beaa/api/counter/index.php?op=11" "username=operator.demo@example.com&password=OperatorDemo@123&counter=1&autologin=false" "1"
 fi
