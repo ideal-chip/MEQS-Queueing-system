@@ -81,7 +81,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'settings_server'.tr,
                   child: _TextSetting(
                     label: 'api_base_url'.tr,
-                    hint: 'http://192.168.1.41:8000/beaa/api/v1',
+                    hint: 'http://192.168.1.2/api/v1',
                     initial: settings.apiBaseUrl.value,
                     onSaved: settings.updateApiBaseUrl,
                   ),

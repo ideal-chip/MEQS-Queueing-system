@@ -186,7 +186,21 @@ function submitFeedback($mysqli, $counterId, $body) {
 
 //====================================================================  | routing
 
-$path = rtrim($_SERVER['API_V1_PATH'] ?? '', '/');
+$path = $_SERVER['API_V1_PATH'] ?? '';
+
+// Apache reaches this front controller through mod_rewrite, while the PHP
+// development router sets API_V1_PATH explicitly. Derive the same value from
+// REQUEST_URI under Apache so both /api/v1 and /beaa/api/v1 behave identically.
+if ($path === '') {
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    foreach (array('/beaa/api/v1', '/api/v1') as $apiPrefix) {
+        if ($requestPath === $apiPrefix || strpos($requestPath, $apiPrefix . '/') === 0) {
+            $path = substr($requestPath, strlen($apiPrefix));
+            break;
+        }
+    }
+}
+$path = rtrim($path, '/');
 $method = $_SERVER['REQUEST_METHOD'];
 
 // GET /feedback/form

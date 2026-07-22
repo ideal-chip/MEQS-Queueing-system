@@ -4,6 +4,12 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
+
+    # REST API v1 front controller. Keep these rules before the generic
+    # /api -> /beaa/api redirect so POST requests are handled internally
+    # instead of crossing a redirect that may change the HTTP method.
+    RewriteRule ^api/v1(?:/(.*))?$ beaa/api/v1/index.php [L,QSA]
+    RewriteRule ^beaa/api/v1(?:/(.*))?$ beaa/api/v1/index.php [L,QSA]
     
     # Redirect /admin/* to /beaa/admin/*
     RewriteCond %{REQUEST_URI} ^/admin/(.*)$

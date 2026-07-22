@@ -10,7 +10,7 @@ class AppDefaults {
   AppDefaults._();
 
   /// Server address. Overridable at runtime from the Settings screen.
-  static const String apiBaseUrl = 'http://192.168.1.41:8000/beaa/api/v1';
+  static const String apiBaseUrl = 'http://192.168.1.2/api/v1';
 
   // Brand palette (iDEAL-Q logo): blue primary, gold accent, on deep navy.
   static const Color primaryColor = AppColors.blue;
