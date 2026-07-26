@@ -22,3 +22,9 @@ tmp/
 uploads/
 storage/
 backups/
+
+# macOS
+.DS_Store
+
+# Local server backups
+backup old/
