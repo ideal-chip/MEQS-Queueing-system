@@ -1,167 +1,148 @@
-// iDEAL-Q Common JavaScript Functions
+$(document).ready(function () {
 
-// Copy a counter-feedback link to the clipboard, with a brief button flash
-// as feedback (used on admin/counters.php and its edit form).
-function copyFeedbackLink(url, btnEl) {
-    var done = function () {
-        if (!btnEl) return;
-        var original = btnEl.innerHTML;
-        btnEl.innerHTML = '<i class="glyphicon glyphicon-ok"></i>';
-        setTimeout(function () { btnEl.innerHTML = original; }, 1200);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(done).catch(function () { fallbackCopy(url, done); });
-    } else {
-        fallbackCopy(url, done);
-    }
-}
-
-function fallbackCopy(text, cb) {
-    var tmp = document.createElement('textarea');
-    tmp.value = text;
-    tmp.style.position = 'fixed';
-    tmp.style.opacity = '0';
-    document.body.appendChild(tmp);
-    tmp.select();
-    try { document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(tmp);
-    if (cb) cb();
-}
-
-// Get current date
-function getDate() {
-    var today = new Date();
-    var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth() + 1).padStart(2, '0');
-    var yyyy = today.getFullYear();
-    return dd + '/' + mm + '/' + yyyy;
-}
-
-// Get current time
-function getTime() {
-    var today = new Date();
-    var h = String(today.getHours()).padStart(2, '0');
-    var m = String(today.getMinutes()).padStart(2, '0');
-    var s = String(today.getSeconds()).padStart(2, '0');
-    return h + ':' + m + ':' + s;
-}
-
-// Get current date and time
-function getDateTime() {
-    return getDate() + ' ' + getTime();
-}
-
-// Format number with leading zeros
-function pad(num, size) {
-    var s = num + "";
-    while (s.length < size) s = "0" + s;
-    return s;
-}
-
-// Show loading indicator
-function showLoading() {
-    if ($('#loading-indicator').length === 0) {
-        $('body').append('<div id="loading-indicator" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;"><div style="background:white;padding:20px;border-radius:5px;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Loading...</div></div>');
-    } else {
-        $('#loading-indicator').show();
-    }
-}
-
-// Hide loading indicator
-function hideLoading() {
-    $('#loading-indicator').hide();
-}
-
-// Show alert message
-function showAlert(message, type) {
-    type = type || 'info';
-    var alertClass = 'alert-' + type;
-    var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible" role="alert">' +
-        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-        '<span aria-hidden="true">&times;</span></button>' +
-        message + '</div>';
-    
-    if ($('#alert-container').length === 0) {
-        $('body').prepend('<div id="alert-container" style="position:fixed;top:10px;right:10px;z-index:9998;max-width:400px;"></div>');
-    }
-    
-    $('#alert-container').append(alertHtml);
-    
-    setTimeout(function() {
-        $('#alert-container .alert:first').fadeOut(function() {
-            $(this).remove();
-        });
-    }, 5000);
-}
-
-// Confirm dialog
-function confirmAction(message, callback) {
-    if (confirm(message)) {
-        callback();
-    }
-}
-
-// Format currency
-function formatCurrency(amount) {
-    return parseFloat(amount).toFixed(2);
-}
-
-// AJAX error handler
-function handleAjaxError(xhr, status, error) {
-    console.error('AJAX Error:', status, error);
-    showAlert('An error occurred: ' + error, 'danger');
-    hideLoading();
-}
-
-// Initialize tooltips
-function initTooltips() {
-    if (typeof $().tooltip === 'function') {
-        $('[data-toggle="tooltip"]').tooltip();
-    }
-}
-
-// Initialize popovers
-function initPopovers() {
-    if (typeof $().popover === 'function') {
-        $('[data-toggle="popover"]').popover();
-    }
-}
-
-// Document ready
-$(document).ready(function() {
-    // Initialize Bootstrap components
-    initTooltips();
-    initPopovers();
-    
-    // Add active class to current menu item
-    var currentPage = window.location.pathname.split("/").pop();
-    $('.navbar-nav li a').each(function() {
-        var href = $(this).attr('href');
-        if (href && href.indexOf(currentPage) !== -1) {
-            $(this).parent('li').addClass('active');
-        }
+    $(".btn").mouseup(function () {
+        $(this).blur();
     });
-    
-    // Handle form validation
-    $('form[data-validate="true"]').submit(function(e) {
-        var isValid = true;
-        $(this).find('input[required], select[required], textarea[required]').each(function() {
-            if (!$(this).val()) {
-                isValid = false;
-                $(this).closest('.form-group').addClass('has-error');
-            } else {
-                $(this).closest('.form-group').removeClass('has-error');
-            }
-        });
-        
-        if (!isValid) {
-            e.preventDefault();
-            showAlert('Please fill in all required fields', 'warning');
-        }
-    });
-    
-    // Auto-hide alerts
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 5000);
+
 });
+//==============================================================================|| lang
+
+function updateLang(lang) {
+    location.replace("?language=" + lang);
+}
+//==============================================================================|| time
+// get time formatted
+function updateTime() {
+    $("#time").text(getTime());
+}
+
+function getTime() {
+
+    var date = new Date();
+    return tow_digit(date.getHours()) + ":" + tow_digit(date.getMinutes()) + ":" + tow_digit(date.getSeconds());
+}
+
+function getDate() {
+
+    var date = new Date();
+    return tow_digit(date.getDate()) + "/" + tow_digit(date.getMonth() + 1) + "/" + tow_digit(date.getFullYear());
+}
+
+function getTimeShort() {
+
+    var date = new Date();
+    return tow_digit(date.getMinutes()) + ":" + tow_digit(date.getSeconds());
+}
+
+function tow_digit(num) {
+    return (num > 9) ? num : "0" + num;
+}
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|| Export Excel
+function exportData(report_id) {
+    var item = document.getElementById(report_id);
+    var clone = item.cloneNode(true);
+
+    $(clone).find(".tb-remove").remove();
+    $(clone).find("a").contents().unwrap();
+    $(clone).find("img").remove();
+    var hdStyle = "color: #fff;background-color: #2196f3;";
+//    var rowStyle = "border-bottom: 1px solid #333;";
+    $(clone).find("thead tr").attr("style", hdStyle);
+
+    $(clone).find("tr").each(function () {
+        if ($(this).text().trim() == "") {
+            $(this).remove();
+        }
+    });
+    var blob = new Blob([clone.innerHTML], {
+        type: "text/plain;charset=utf-8;"
+    });
+    saveAs(blob, "Report-" + report_id + ".xls");
+}
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|| Printing
+function printElement(id, hdr, ftr) {
+    var item = document.getElementById(id);
+    var clone = item.cloneNode(true);
+
+    hdr = (!hdr || hdr == "") ? "" : "<h5>" + hdr + "</h5>";
+    ftr = (!ftr || ftr == "") ? "" : ftr;
+
+//console.log(hdr);
+
+    $(clone).print({
+        //Use Global styles
+        globalStyles: true,
+        //Add link with attrbute media=print
+        mediaPrint: false,
+        //Custom stylesheet
+//            stylesheet : "../css/common.css",
+        //Print in a hidden iframe
+        iframe: true,
+        //Don't print this
+        noPrintSelector: ".no-print",
+        //Add this at top
+        //prepend: hdr,
+        //Add this on bottom
+        //append: ftr,
+        //Log to console when printing is done via a deffered callback
+//        deferred: $.Deferred().done(function () {
+//            console.log('Printing done', arguments);
+//        })
+    });
+}
+
+function printElement2(id) {
+    var item = document.getElementById(id);
+    var clone = item.cloneNode(true);
+    $(clone).find("tr").each(function () {
+        if ($(this).text().trim() == "" || $(this).hasClass("hidden")) {
+            $(this).remove();
+        }
+    });
+
+    $(clone).find(".no-print").each(function () {
+        $(this).remove();
+    });
+    $(clone).printThis({
+        pageTitle: "Report live minutes",
+        header: "<h1>Report: live minutes</h1>", // prefix to html
+        footer: "<p class='text-center small'> ® iDEALChip Electronics, Inc. © 1997 - <?php echo date('Y') ?> - iDEAL-shifts: <?php echo date('Y') ?></p>"
+    });
+}
+
+//==============================================================================|| tables
+
+function renderHead(array, size) {
+    var hds = '<tr>';
+
+    for (var i = 0; i < size; i++) {
+        hds += "<th>" + array[i] + "</th>";
+    }
+
+    return hds + "</tr>";
+}
+function renderRow(array, size) {
+    var tds = '<tr>';
+
+    for (var i = 0; i < size; i++) {
+        tds += "<td>" + array[i] + "</td>";
+    }
+
+    return tds + "</tr>";
+}
+
+//==============================================================================|| Other Functions
+//function resizeElement(id) {
+//    var iframe = document.getElementById(id);
+//    iframe.style.height = 'auto';
+//    iframe.style.height = (parseInt(iframe.contentWindow.document.body.scrollHeight) + 50) + 'px';
+//}
+function arrFromJsonObj(obj) {
+    var arr = [];
+    for (var x in obj)
+        if (obj.hasOwnProperty(x)) {
+            arr.push(obj[x]);
+        }
+    return arr;
+}

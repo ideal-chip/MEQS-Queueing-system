@@ -1,0 +1,34 @@
+@font-face{
+	font-family:"idealQ";	
+	src:url("../fonts/DroidNaskh-Regular.ttf");
+}
+
+body{
+text-align:center;
+color:white;
+background-color:#505050;
+}
+
+table{
+text-align:center;	
+height:700px;
+width:1200px;
+position:fixed;
+margin-left:-600px;
+margin-top:-350px;
+top:50%;
+left:50%;
+font-size:140pt;
+font-family:"idealQ";
+font-weight:bold;
+}
+
+#counter_no{
+color:lime;
+text-shadow: 0 0 10px lime;
+}
+
+#num{
+color:red;
+text-shadow: 0 0 5px red;
+}

@@ -1,0 +1,167 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    background-color: #D8D8D8;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+/*input,
+select,
+textarea {
+    max-width: 280px;
+}*/
+
+.navbar-inverse {
+    background-color: #0072bc;
+    border-color: #080808;
+}
+
+.navbar-inverse .navbar-nav > li > a {
+    color: #edf2f9;
+}
+
+.navbar-inverse .navbar-brand {
+    color: white;
+}
+
+.btn-box{
+    margin: 20px 0;
+    padding: 0px;
+    /*    text-align: center;*/
+    /*    width: 150px;
+        height: 150px;*/
+
+    /*    text-align: center;
+        vertical-align: middle;*/
+}
+.con{
+    margin: 30px auto;
+    width: 50%;
+}
+.blue{
+    color:#668cff;
+}
+
+.btn-prima{
+    padding: 45px 0!important;
+    margin: 10px;
+    width: 200px;
+    height: 120px;
+    border-radius: 10px !important;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 28px;
+}
+.fright{
+    float: right;
+    clear: both;
+}
+
+.stick-btm{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ [ logo big ]*/
+.logo-big{
+    display: table;
+    margin: 0 auto;
+}
+.logo-big img{
+    width: 80%;
+    height: 80%;
+
+}
+/*.container{
+    margin-top: 20px;
+    margin-bottom: 50px;
+        background-color: #ddd;
+    padding: 10px;
+        width: 100%;
+}*/
+.container-new{
+    margin-top: 20px;
+    margin-bottom: 50px;
+    /*    background-color: #ddd;*/
+    padding: 10px;
+    /*    width: 100%;*/
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ [ login ]*/
+.bdy-login{
+    padding-top: 20px;
+    padding-bottom: 0px;
+    background-color: #D8D8D8;
+}
+.bdy-login .container, .bdy-login .container{
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ [ login form ]*/
+
+.info-login{
+    padding: 10px;
+    background-color: #021f23;
+    box-shadow: 1px 1px 4px #999;
+    margin: 10px 0;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+.form-signin {
+    max-width: 330px;
+    padding: 15px;
+    margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+    margin-bottom: 10px;
+}
+.form-signin .checkbox {
+    font-weight: normal;
+}
+.form-signin .form-control {
+    position: relative;
+    height: auto;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 16px;
+}
+.form-signin .form-control:focus {
+    z-index: 2;
+}
+.form-signin input[type="email"] {
+    margin-bottom: -1px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+    margin-bottom: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.ftr-logo-con{
+     margin: 0 5px;
+}
+.ftr-logo-con img{
+    width: 30px;
+    height: 30px;
+}

@@ -1,324 +1,801 @@
-// iDEAL-Q — clerk counter workstation
-// Wires the counter UI (call / recall / pending / transfer / close / logout)
-// to the existing ../api/counter/?op=N endpoints. All the vars used below
-// (counterID, clerkID, val_maxCount, call_delay_def, recall_times_def,
-// alert_*, lang_*, path_audio_notification, ...) are declared inline in
-// main.php just before this file is loaded.
+$(document).ready(function () {
 
-var currentEvent = null;
-var callTimer = null, recallTimer = null;
-var pollTimer = null;
+    $('[data-toggle="tooltip"]').tooltip();
 
-var API = '../api/counter/?op=';
+    getPendingList();
+    refreshData();
+    // setup transfer dialog
+    switchOption('counters');
+    document.getElementById('toCounter').checked = 'checked';
 
-function apiGet(op, params, cb) {
-    var qs = 'op=' + op;
-    for (var k in params) {
-        if (params.hasOwnProperty(k)) {
-            qs += '&' + k + '=' + encodeURIComponent(params[k]);
-        }
+    $(".cat-radio").click(function () {
+        updateStatus(this.id);
+    });
+});
+//==============================================================  | vars
+
+var call_timer = document.getElementById('call-timer');
+var recall_timer = document.getElementById('recall-timer');
+var latest_size = document.getElementById("latest-size");
+var eventNo_box = document.getElementById('eventno');
+var eventDate_box = document.getElementById('eventdate');
+
+// --------------------------------|| colors
+var activeColor = 'white';
+var inactiveColor = 'red';
+var transparentColor = 'transparent';
+var textColor = activeColor;
+
+// --------------------------------|| calls vars
+var recallCount = recall_times_def;
+var lockCounterCall = 0;
+var lockCounterRecall = 0;
+var callType = 0;
+var eventClicked = 0
+
+// --------------------------------|| other vars
+
+var counterState = 1;
+var lastID = 0;
+var lastCalledCategory = 0;
+var lastCalledNo = '';
+var lastCalledDate = '';
+
+var lastCount = 0;
+var flashTimes = 0;
+
+//==============================================================  | Intervals
+
+setInterval(function () {
+    refreshData();
+}, 1500);
+setInterval(function () {
+    flashing();
+}, 500);
+setInterval(function () {
+    if (counterState) {
+        refreshLastCalled();
     }
-    $.get('../api/counter/?' + qs, function (data) {
-        cb(data);
-    }).fail(function () {
-        cb(0);
-    });
-}
+}, 1500);
 
-function playNotification() {
-    try {
-        var a = new Audio(path_audio_notification);
-        a.play().catch(function () {});
-    } catch (e) {}
-}
+setInterval(function () {
+    setCounterActive();
+}, 1500);
 
-function startButtonTimer($btn, $badge, seconds, onDone) {
-    var remaining = seconds;
-    $badge.text(remaining);
-    $btn.prop('disabled', true);
-    var timer = setInterval(function () {
-        remaining--;
-        $badge.text(remaining > 0 ? remaining : 0);
-        if (remaining <= 0) {
-            clearInterval(timer);
-            $btn.prop('disabled', false);
-            if (onDone) onDone();
+setInterval(function () {
+    if (counterState) {
+        if (lockCounterCall > 0) {
+            lockCounterCall--;
+            call_timer.innerHTML = lockCounterCall;
+        } else {
+            unlockBtn('call');
         }
-    }, 1000);
-    return timer;
-}
+        if (lockCounterRecall > 0) {
+            lockCounterRecall--;
 
-//====================================================================  | Call / Recall
-
-function setCurrentEvent(eventObj) {
-    currentEvent = eventObj;
-    if (eventObj) {
-        var ticket = (eventObj.eventChar || '') + (eventObj.eventNo || '');
-        $('#eventno').text(ticket);
-        $('#eventdate').text(eventObj.eventTime || '');
-        $('#last-called').text(ticket);
-    } else {
-        $('#eventno').text(lang_opened);
-        $('#eventdate').text('');
+        } else if (recallCount > 0) {
+            unlockBtn('recall');
+        }
+        recall_timer.innerHTML = recallCount;
     }
-}
 
-function call() {
-    if (callTimer) return;
-    apiGet(1, {counter: counterID}, function (data) {
-        if (data && data !== 0 && data !== '0') {
-            var eventObj = (typeof data === 'string') ? JSON.parse(data) : data;
-            setCurrentEvent(eventObj);
-            apiGet(2, {counter: counterID, clerk: clerkID, event: eventObj.eventID, type: 1}, function () {
-                playNotification();
-                refreshData();
-            });
-        } else {
-            alert(alert_noClients);
-        }
-        callTimer = startButtonTimer($('#call'), $('#call-timer'), call_delay_def, function () {
-            callTimer = null;
-        });
-    });
-}
+}, 1000);
 
-function recall() {
-    if (!currentEvent) {
-        alert(alert_pleaseCall);
-        return;
-    }
-    if (recallTimer) return;
-    apiGet(2, {counter: counterID, clerk: clerkID, event: currentEvent.eventID, type: 2}, function (data) {
-        if (data == 1) {
-            playNotification();
-        } else {
-            alert(alert_errorInOperation);
-        }
-    });
-    recallTimer = startButtonTimer($('#recall'), $('#recall-timer'), recall_times_def, function () {
-        recallTimer = null;
-    });
-}
 
-// Pick a specific waiting ticket out of order (only when isPicker == 1).
-function callByEvent(eventID) {
-    apiGet(15, {event: eventID, counter: counterID}, function (data) {
-        if (data && data !== 0 && data !== '0' && data !== 'NO') {
-            var eventObj = (typeof data === 'string') ? JSON.parse(data) : data;
-            setCurrentEvent(eventObj);
-            apiGet(2, {counter: counterID, clerk: clerkID, event: eventObj.eventID, type: 1}, function () {
-                playNotification();
-                refreshData();
-            });
-        } else {
-            alert(alert_errorInOperation);
+//==============================================================  || refresh last called tickets
+
+
+function refreshLastCalled() {
+
+    var calledList = document.getElementById("called-list");
+    var item = "<li class='dropdown-menu-item' >" +
+            "<span class='pad-h-10'>{{ticket}}</span>" +
+            "<span class='pad-h-10'><button class='btn btn-info btn-xs btn-event' onclick='callByEvent({{id}})'>" + lang_recall + "</button></span></li>";
+    var empty = "<li class='empty'>" +
+            "<span class='pad-5 text-danger'>" + lang_empty + "</span></li>";
+
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/counter/',
+        data: {op: 16, counter: counterID},
+        success: function (response, textStatus, jqXHR) {
+            var content = '';
+            calledList.innerHTML = '';
+            if (response.length) {
+                for (var i = 0; i < response.length; i++) {
+                    var d = response[i];
+                    var t = item;
+                    t = t.replace("{{ticket}}", d.Ticket);
+                    t = t.replace("{{id}}", d.ID);
+                    content += t;
+                }
+                latest_size.innerHTML = response.length;
+                calledList.innerHTML = content;
+            } else {
+                calledList.innerHTML = empty;
+                latest_size.innerHTML = 0;
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
         }
     });
 }
 
-//====================================================================  | Pending list
+//==============================================================  | pending
 
 function addPending() {
-    if (!currentEvent) {
+    if (lastID > 0) {
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/counter/',
+            data: {op: 8, counter: counterID, clerk: clerkID, event: lastID},
+            success: function (response, textStatus, jqXHR) {
+//                console.log(response);
+//                console.log("lastID: " + lastID);
+                if (response) {
+
+                    eventID = parseInt(response);
+                    if (eventID > 0) {
+                        flashTimes = 1;
+                        resetCounter();
+                        getPendingList();
+                        UpdateLastCalledStatus(2);
+                    }
+                } else {
+                    //alert("error adding to pending list!");
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
+        });
+    } else {
         alert(alert_pleaseCall);
-        return;
     }
-    apiGet(8, {counter: counterID, event: currentEvent.eventID, clerk: clerkID}, function (data) {
-        if (data && data !== 0 && data !== '0') {
-            setCurrentEvent(null);
-            loadPendingList();
-            refreshData();
-        } else {
-            alert(alert_errorInOperation);
+}
+
+function getPendingList() {
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/counter/',
+        data: {op: 9, counter: counterID},
+        success: function (response, textStatus, jqXHR) {
+            var pending_list_con = document.getElementById('pending-list');
+            if (response && response.length > 0) {
+//                console.log(response);
+
+                var content = "";
+                for (var i = response.length - 1; i >= 0; i--) {
+                    var pend_li = document.getElementById('pend-element-hid').innerHTML;
+                    pend_li = pend_li.replace('--ticket--', response[i].ticket);
+                    pend_li = pend_li.replace("'--event--'", response[i].eventID);
+                    content += pend_li;
+                }
+                document.getElementById('pend-count').innerHTML = response.length;
+                pending_list_con.innerHTML = content;
+
+            } else {
+                pending_list_con.innerHTML = lang_empty;
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
         }
     });
 }
+
 
 function removePending(eventID) {
-    apiGet(10, {event: eventID, counter: counterID}, function (data) {
-        if (data && data !== 0 && data !== '0' && data !== 'OLD' && data !== '"NO"') {
-            var eventObj = (typeof data === 'string') ? JSON.parse(data) : data;
-            if (eventObj && eventObj !== 'NO') {
-                setCurrentEvent(eventObj);
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/counter/',
+        data: {op: 10, event: eventID, counter: counterID},
+        success: function (response, textStatus, jqXHR) {
+//            console.log(response);
+            if (response) {
+
+                if (response === "NO") {
+                    alert(alert_noClients);
+                    resetCounter();
+                } else if (response === "OLD") {
+                    getPendingList();
+                } else {
+
+                    lastID = response.eventID;
+                    lastCalledCategory = response.eventCategory;
+                    lastCalledNo = response.Ticket;
+                    lastCalledDate = lang_enterTime + response.eventTime;
+                    //                            lastCalled.value = lastID;
+                    eventNo_box.innerHTML = lastCalledNo;
+                    eventDate_box.innerText = lastCalledDate;
+                    getPendingList();
+
+                    resetRecallCount();
+                    UpdateLastCalledStatus(0);
+                    if (document.getElementById('autocall').checked) {
+                        recall(1);
+                    }
+                }
+
+            } else {
+                alert(alert_errorInOperation);
             }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
         }
-        loadPendingList();
-        refreshData();
     });
 }
 
-function loadPendingList() {
-    apiGet(9, {counter: counterID}, function (data) {
-        var $list = $('#pending-list');
-        $list.empty();
-        var items = (data && data !== 0 && data !== '0') ? (typeof data === 'string' ? JSON.parse(data) : data) : [];
-        $('#pend-count').text(items.length);
-        items.forEach(function (item) {
-            var $row = $('#pend-element-hid li').clone();
-            $row.find('.p-remove').attr('onclick', "removePending(" + item.eventID + ");");
-            $row.find('.p-tick').text(item.ticket);
-            $list.append($row);
+//==============================================================  | flashing
+
+function flashing() {
+    var changeColor = '';
+    if (flashTimes)
+    {
+        if (flashTimes-- & 1)
+        {
+            changeColor = textColor;
+
+        } else
+        {
+            changeColor = transparentColor;
+        }
+        eventNo_box.style.color = changeColor;
+    } else {
+        eventNo_box.style.color = textColor;
+    }
+}
+
+//==============================================================  | Audio notification
+function notification() {
+    var audio = new Audio(path_audio_notification);
+    audio.play();
+}
+
+//==============================================================  | change Language
+function changeLang() {
+    var x = document.getElementById("lang").value;
+    location.replace(langPathReplace + x);
+}
+
+//==============================================================  | category enable/ disable
+
+function updateStatus(id) {
+
+    var enabled = 0;
+    if (!$("#" + id).hasClass('pressed')) {
+        enabled = 1;
+    }
+
+    id = id.replace("cc", '');
+
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/update.php',
+        data: {type: 'catstatus', id: id, enabled: enabled},
+        success: function (response, textStatus, jqXHR) {
+            if (response) {
+
+                $("#cc" + response).toggleClass('pressed');
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+        }
+    });
+}
+
+//==============================================================  | Last Called Status
+
+//0:call, 1: recall, 2: pending, 3:transfer
+function UpdateLastCalledStatus(index)
+{
+
+    var badges = document.getElementsByClassName('badged');
+    for (var i = 0; i < badges.length; i++)
+    {
+        if (i === index) {
+            $(badges[i]).toggleClass('badged-active', true);
+        } else {
+            $(badges[i]).toggleClass('badged-active', false);
+        }
+    }
+
+}
+
+//==============================================================  | transfer
+
+function transfer(cat) {
+    if (lastID)
+    {
+        var toCounter = 0;
+        var toCategory = cat;
+        if (document.getElementById('toCategory').checked) {
+            toCategory = document.getElementById('categories').value;
+        }
+        if (document.getElementById('toCounter').checked)
+        {
+            var toCounter = document.getElementById('counters').value;
+        }
+
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/counter/',
+            data: {op: 3, counter: counterID, clerk: clerkID, event: lastID, tocounter: toCounter, tocategory: toCategory},
+            success: function (response, textStatus, jqXHR) {
+                if (response) {
+
+                    flashTimes = 1;
+                    recallCount = 0;
+                    resetCounter();
+
+                    hideTransferDialog();
+                    UpdateLastCalledStatus(3);
+                } else {
+                    alert(alert_errorTransfer);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
         });
-    });
+
+    } else
+    {
+        alert(alert_pleaseCall);
+    }
+
 }
 
-//====================================================================  | Transfer
+function centerDialog(id) {
+    dialog = document.getElementById(id);
+    d_width = dialog.clientWidth;
+    w_width = document.body.clientWidth;
+    d_height = dialog.clientHeight;
+    w_height = document.body.clientHeight;
+    //alert(d_width + " " + w_width);
+
+    dialog.style.top = (w_height - d_height - 100) / 2 + 'px';
+    dialog.style.left = (w_width - d_width) / 2 + 'px';
+    //dialog.style.
+
+}
+
+function switchOption(id) {
+    $('.transfer-option').hide();
+    $('#' + id).show();
+}
 
 function showTransferDialog() {
-    if (!currentEvent) {
+    if (lastID)
+    {
+        document.getElementById('ticketNo').innerHTML = lastCalledNo;
+        //alert(lastCalledNo);
+
+        document.getElementById('fullScreen').style.display = 'block';
+        document.getElementById('transferDialog').style.display = 'block';
+        //alert(lastID + " " + lastCalledCategory);
+        document.getElementById('categories').value = lastCalledCategory;
+        centerDialog('transferDialog');
+    } else
+    {
         alert(alert_pleaseCall);
-        return;
     }
-    var ticket = (currentEvent.eventChar || '') + (currentEvent.eventNo || '');
-    $('#ticketNo').text(ticket);
-    $('#fullScreen').show();
-    $('#transferDialog').show();
 }
 
 function hideTransferDialog() {
-    $('#fullScreen').hide();
-    $('#transferDialog').hide();
+    document.getElementById('transferDialog').style.display = 'none';
+    document.getElementById('fullScreen').style.display = 'none';
 }
 
-function switchOption(which) {
-    if (which === 'counters') {
-        $('#counters').show();
-        $('#categories').hide();
-    } else {
-        $('#counters').hide();
-        $('#categories').show();
+
+//==============================================================  | call / recall
+
+
+// --------------------------------|| funcs - call
+function call() {
+
+    lastOperation = 1;
+
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/counter/',
+        data: {op: 1, counter: counterID, clerk: clerkID},
+        success: function (response, textStatus, jqXHR) {
+
+            if (response) {
+
+                var result = response;
+
+
+
+                lastID = result.eventID;
+                lastCalledCategory = result.eventCategory;
+                lastCalledNo = result.eventChar + result.eventNo;
+                lastCalledDate = lang_enterTime + result.eventTime;
+                //                            lastCalled.value = lastID;
+                eventNo_box.innerHTML = lastCalledNo;
+                eventDate_box.innerText = lastCalledDate;
+
+                // update last called box
+                lockBtn('call');
+                document.getElementById('last-called').innerHTML = lastCalledNo;
+                UpdateLastCalledStatus(0);
+                resetRecallCount();
+
+                if (document.getElementById('autocall').checked) {
+                    recall(1);
+                }
+
+            } else {
+                alert(alert_noClients);
+                resetCounter();
+            }
+//            console.log(response);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+        }
+    });
+}
+
+// --------------------------------|| funcs - call by event
+
+function callByEvent(eventID) {
+    if (eventClicked !== eventID) {
+        eventClicked = eventID;
+
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/counter/',
+            data: {op: 15, counter: counterID, event: eventID},
+            success: function (response, textStatus, jqXHR) {
+
+                if (response) {
+
+                    if (response === "NO") {
+
+                        alert(alert_errorInOperation);
+                        resetCounter();
+                        eventClicked = 0;
+
+                    } else {
+
+                        var result = response;
+
+                        lastID = result.eventID;
+                        lastCalledCategory = result.eventCategory;
+                        lastCalledNo = result.eventChar + result.eventNo;
+                        lastCalledDate = lang_enterTime + result.eventTime;
+                        // lastCalled.value = lastID;
+                        eventNo_box.innerHTML = lastCalledNo;
+                        eventDate_box.innerText = lastCalledDate;
+                        // update last called box
+                        document.getElementById('last-called').innerHTML = lastCalledNo;
+                        UpdateLastCalledStatus(0);
+                        resetRecallCount();
+
+                        if (document.getElementById('autocall').checked) {
+                            recall(1);
+                        }
+
+                    }
+                } else {
+                    alert(alert_errorInOperation);
+                    eventClicked = 0;
+                }
+//            console.log(response);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
+        });
     }
 }
 
-function transfer(directCategoryId) {
-    if (!currentEvent) {
+// --------------------------------|| funcs - recall
+
+// type: 0: recall only[defualt], 1: call then recall
+
+function recall(type) {
+    if (!type) {
+        type = 0;
+    }
+    if (recallCount > 0) {
+        sendRecall(type);
+    } else {
+        lockBtn('recall');
+    }
+}
+
+function sendRecall(type) {
+    lastOperation = 2;
+    if (lastID) {
+        callType = type;
+
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/counter/',
+            data: {op: 2, counter: counterID, clerk: clerkID, event: lastID, type: type},
+            success: function (response, textStatus, jqXHR) {
+
+                if (response) {
+                    flashTimes = 10;
+                    if (callType == 0) {
+                        recallCount--;
+                        UpdateLastCalledStatus(1);
+                    }
+                    lockBtn('recall');
+                    lockBtn('call');
+                } else {
+                    alert(alert_errorInOperation);
+                }
+//            console.log(response);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
+        });
+
+    } else {
         alert(alert_pleaseCall);
-        return;
+        resetCounter();
     }
-    var params = {counter: counterID, clerk: clerkID, event: currentEvent.eventID};
-    if (typeof directCategoryId !== 'undefined') {
-        params.tocategory = directCategoryId;
-    } else if ($('#toCounter').is(':checked')) {
-        params.tocounter = $('#counters').val();
+}
+
+function resetRecallCount() {
+    recallCount = recall_times_def;
+}
+function unlockBtn(id) {
+    var btn = document.getElementById(id);
+    btn.disabled = false;
+//                            $("#" + id).toggleClass("locked", false);
+}
+
+function lockBtn(id) {
+    var btn = document.getElementById(id);
+    btn.disabled = true;
+//                            $("#" + id).toggleClass("locked", true);
+    if (id = 'call') {
+        lockCounterCall = call_delay_def;
+    }
+    if (id = 'recall') {
+        lockCounterRecall = call_delay_def;
+    }
+
+}
+
+//==============================================================  | refresh Data
+function showPriorityReversed(num, size) {
+    if (num == 0) {
+        return '-';
     } else {
-        params.tocategory = $('#categories').val();
+        return size - num + 1;
     }
-    apiGet(3, params, function (data) {
-        if (data == 1) {
-            setCurrentEvent(null);
-            hideTransferDialog();
-            refreshData();
-        } else {
-            alert(alert_errorTransfer);
-        }
-    });
-}
-
-//====================================================================  | Category toggle
-
-$(document).on('click', '.cat-radio', function () {
-    var $btn = $(this);
-    var id = $btn.attr('id');
-    if (!id) return;
-    var ccID = id.replace('cc', '');
-    var enabled = $btn.hasClass('pressed') ? 0 : 1;
-    $.get('../api/update.php?type=catstatus&id=' + ccID + '&enabled=' + enabled, function (data) {
-        if (data == ccID) {
-            $btn.toggleClass('pressed');
-        }
-    });
-});
-
-//====================================================================  | Open / close / logout
-
-function openCounter() {
-    apiGet(5, {counter: counterID}, function () {
-        $('#open').prop('disabled', true);
-        $('#close, #call, #recall, #pending, #transfer').prop('disabled', false);
-    });
-}
-
-function closeCounter() {
-    apiGet(6, {counter: counterID}, function (data) {
-        if (data == 1) {
-            $('#open').prop('disabled', false);
-            $('#close, #call, #recall, #pending, #transfer').prop('disabled', true);
-            setCurrentEvent(null);
-        } else {
-            alert(alert_errorClose);
-        }
-    });
-}
-
-function logout() {
-    apiGet(12, {}, function (data) {
-        if (data == 1) {
-            window.location.href = './';
-        } else {
-            alert(alert_errorLogout);
-        }
-    });
-}
-
-function changeLang() {
-    var lang = $('#lang').val();
-    window.location.href = langPathReplace + lang;
-}
-
-//====================================================================  | Refresh loop (queue preview, counters, latest calls)
-
-function renderEventItems(events) {
-    var $tbl = $('#eventItems');
-    $tbl.empty();
-    events.forEach(function (ev) {
-        var ticket = (ev.eventChar || '') + (ev.eventNo || '');
-        var $tr = $('<tr>').css('cursor', isPicker ? 'pointer' : 'default');
-        $tr.append($('<td>').text(ticket));
-        $tr.append($('<td>').text(ev.eventTime || ''));
-        if (ev.eventTransferred == 1) {
-            $tr.append($('<td>').text('T'));
-        }
-        if (isPicker) {
-            $tr.on('click', function () {
-                callByEvent(ev.eventID);
-            });
-        }
-        $tbl.append($tr);
-    });
 }
 
 function refreshData() {
-    apiGet(4, {counter: counterID, clerk: clerkID}, function (data) {
-        if (!data) return;
-        var arr = (typeof data === 'string') ? JSON.parse(data) : data;
-        if (!arr || !arr.length) return;
-        var summary = arr[arr.length - 1];
-        var events = arr.slice(0, arr.length - 1);
-        renderEventItems(events.slice(0, val_maxCount));
-        $('#waiting').text(summary.eventQty);
-        $('#c-load').text(summary.counterload);
-        if (summary.lastCalled && summary.lastCalled !== '-') {
-            $('#last-called').text(summary.lastCalled);
-        }
-    });
+    if (counterState)
+    {
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/counter/',
+            data: {op: 4, counter: counterID, clerk: clerkID},
+            success: function (response, textStatus, jqXHR) {
+                if (response) {
 
-    apiGet(16, {counter: counterID}, function (data) {
-        var $list = $('#called-list');
-        var items = (data && data !== 0 && data !== '0') ? (typeof data === 'string' ? JSON.parse(data) : data) : [];
-        $('#latest-size').text(items.length);
-        if (!items.length) {
-            $list.html("<li class='empty'><span class='pad-5 text-danger'>" + lang_empty + "</span></li>");
-            return;
-        }
-        $list.empty();
-        items.forEach(function (item) {
-            $list.append($('<li>').append($('<span>').addClass('pad-5').text(item.Ticket)));
+                    var events = response;
+                    var eventsTable = document.getElementById('eventItems');
+
+                    var header = "<tr class='small text-center-th'>" +
+                            "<th class='small'>" + lang_eventPriority + "</th>" +
+                            "<th class='small'>" + lang_eventNo + "</th>" +
+                            "<th class='small'>" + lang_enterTime + "</th>" +
+                            "<th></th>" +
+                            "</tr>";
+
+                    var maxCount = val_maxCount;
+                    var eventsRows = "";
+                    eventsRows += header;
+
+                    if (events)
+                    {
+                        var lastCount = events.length;
+                        var size = (lastCount <= maxCount ? lastCount - 1 : maxCount);
+
+                        UpdateCounterData(events[size].eventQty, events[size].lastCalled, events[size].counterload);
+
+                        for (var curCount = 0; curCount < size; curCount++)
+                        {
+                            var pickBtn = (isPicker === 0 ? "" : "<a class='badge-red-sm hover-white' href='javascript:void(0);' onclick='callByEvent(--eventID--);'><span class='glyphicon glyphicon-arrow-up'></span></a>");
+                            var tableRow = "<tr class='event-row'>" +
+                                    "<td>--priority--</td>" +
+                                    //"<td>--ticket--" + (events[curCount].eventTransferred == "1" ? "<img src='" + path_img_transferred + "' style='vertical-align:middle;'>" : "") + "</td>" +
+                                    "<td>" + (events[curCount].eventTransferred == "1" ? " <i class='fa fa-arrow-circle-left'></i>" : "") + " --ticket--</td>" +
+                                    "<td>--eventTime--</td>" +
+                                    "<td class='relative'>" + pickBtn + "</td>" +
+                                    "</tr>";
+                            tableRow = tableRow.replace('--priority--', showPriorityReversed(events[curCount].eventPriority, 10));
+                            tableRow = tableRow.replace('--ticket--', events[curCount].eventChar + events[curCount].eventNo);
+                            tableRow = tableRow.replace('--eventTime--', events[curCount].eventTime);
+                            tableRow = tableRow.replace("--eventID--", events[curCount].eventID);
+
+                            eventsRows += tableRow;
+                        }
+                        eventsTable.innerHTML = eventsRows;
+
+                    } else
+                    {
+                        eventsRows += "<tr class='event-row'>" +
+                                "<td colspan='4'>" + lang_empty + "</td>" +
+                                "</tr>";
+                    }
+                    eventsTable.innerHTML = eventsRows;
+                }
+//            console.log(response);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
         });
+    }
+}
+
+function UpdateCounterData(totalWaiting, lastCalled, counterLoad) {
+    lastCalledNo = lastCalled;
+
+    document.getElementById('waiting').innerHTML = totalWaiting;
+    document.getElementById('last-called').innerHTML = lastCalled;
+    document.getElementById('c-load').innerHTML = counterLoad;
+}
+
+//==============================================================  | open / close counter
+
+function closeCounter() {
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/counter/',
+        data: {op: 6, counter: counterID, clerk: clerkID},
+        success: function (response, textStatus, jqXHR) {
+
+            if (response)
+            {
+                flashTimes = 1;
+                counterState = 0;
+                textColor = inactiveColor;
+
+                eventNo_box.innerHTML = lang_closed;
+                eventNo_box.style.color = textColor;
+                eventDate_box.innerHTML = "&nbsp;";
+                document.getElementById('open').disabled = false;
+                document.getElementById('close').disabled = true;
+                document.getElementById('call').disabled = true;
+                document.getElementById('recall').disabled = true;
+                document.getElementById('transfer').disabled = true;
+                document.getElementById('autocall').disabled = true;
+                document.getElementById('pending').disabled = true;
+//                document.getElementById('waitEvents').innerHTML = "";
+                document.getElementById('pending-list').innerHTML = "<span class='red-text'>" + lang_closed + "</span>";
+                $(".shader").show();
+                $(".btn-event").addClass("disabled");
+
+                var directBtn = document.getElementById('direct-transfer');
+                if (directBtn) {
+                    directBtn.disabled = true;
+                }
+
+            } else
+            {
+                alert(alert_errorClose);
+            }
+//            console.log(response);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+        }
     });
 }
 
-$(document).ready(function () {
-    loadPendingList();
-    refreshData();
-    pollTimer = setInterval(refreshData, 5000);
-});
+function openCounter() {
+
+    counterState = 1;
+    textColor = activeColor;
+
+    eventNo_box.style.color = textColor;
+    document.getElementById('open').disabled = true;
+    document.getElementById('close').disabled = false;
+//    document.getElementById('call').disabled = false;
+//    document.getElementById('recall').disabled = false;
+    document.getElementById('transfer').disabled = false;
+    document.getElementById('autocall').disabled = true;
+    document.getElementById('pending').disabled = false;
+//    document.getElementById('waitEvents').innerHTML = "<table border='0' id='eventItems'></table>";
+    $(".btn-event").removeClass("disabled");
+    $(".shader").hide();
+
+    if (lastCalledNo && lastID) {
+        eventNo_box.innerHTML = lastCalledNo;
+        eventDate_box.innerHTML = lastCalledDate;
+    } else {
+        eventNo_box.innerHTML = lang_opened;
+        eventDate_box.innerHTML = "&nbsp;";
+    }
+
+    var directBtn = document.getElementById('direct-transfer');
+//                        alert(directBtn);
+    if (directBtn) {
+        document.getElementById('direct-transfer').disabled = false;
+    }
+    getPendingList();
+
+//    document.getElementById('fullScreen').style.display = 'none';
+}
+
+function resetCounter() {
+
+    eventNo_box.innerHTML = lang_opened;
+    eventDate_box.innerHTML = '';
+    lastID = 0;
+    lastCalledNo = '';
+}
+
+//==============================================================  | set counter active
+
+function setCounterActive() {
+    if (counterState) {
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/update.php',
+            data: {type: 'counter', id: counterID, clerkid: clerkID},
+            success: function (response, textStatus, jqXHR) {
+                if (response) {
+
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
+        });
+    }
+}
+//==============================================================  | login / logout
+
+function logout() {
+    if (window.confirm(msg_logoutMessage)) {
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            cache: false,
+            url: '../api/counter/',
+            data: {op: 12},
+            success: function (response, textStatus, jqXHR) {
+                console.log(response);
+                if (response) {
+
+                    location.reload();
+                } else {
+                    alert(alert_errorLogout);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            }
+        });
+    }
+}
+
+
+

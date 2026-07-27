@@ -1,23 +1,188 @@
-/* iDEAL-Q — admin reports (feedback / followups charts) */
 
-#charts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+
+.text-left{
+    text-align: left !important;
+    padding-left: 10px!important;
+    display: block;
 }
 
-#charts .col-1 {
-    width: 18%;
-    min-width: 160px;
+.text-right{
+    text-align: right !important;
+    padding-right: 10px!important;
+    display: block;
+}
+
+.total-row{
+    background-color: #BBB!important;
+    color: #00004d;
+    border-top: 2px solid #000088;
+    border-bottom: 3px solid #000088;
+}
+
+.table > tbody > tr > td,
+.table > tbody > tr > th,
+.table > tfoot > tr > td,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > thead > tr > th {
+    border: 1px solid #000088!important;
+}
+
+.border-btm-hdr{
+    border-bottom: 3px solid #000088;
+}
+
+/*.total-row{
+    background-color: #BBB!important;
+    color: #00004d;
+    border-top: 2px solid #000088;
+    border-bottom: 2px solid #000088;
+}*/
+
+.table > tbody > tr > td{
+    border:1px solid #000088;
+}
+
+
+
+#chart_1{
+    /*background-color: lightblue;*/
+    border-radius: 10px;
+    padding-top:20px;
     text-align: center;
 }
 
-#chart-data {
-    margin-top: 20px;
+.vm{
+    vertical-align: middle;
 }
 
-.well-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.black-line{
+    stroke: gray;
 }
+
+.ct-line {
+    stroke-width: 2px;
+}
+
+.ct-point {
+    stroke-width: 5px;
+    stroke-linecap: square;
+    stroke:black;
+}
+.ct-series-b .ct-line {
+    /* Set the colour of this series line */
+    stroke: gray;
+    /* Control the thikness of your lines */
+    stroke-width: 3px;
+    /* Create a dashed line with a pattern */
+    stroke-dasharray: 5px 10px;
+}
+
+.round-box{
+    margin: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.round-bdy{
+    position: relative;
+    padding:10px 5px 0;
+    border:2px solid #31b0d5;
+    border-radius: 50px;
+    width: 60px;
+    height: 60px;
+    color: #555;
+    overflow: hidden;
+    margin: 0 auto;
+}
+.round-big{
+    width: 70px;
+    height: 70px;
+    padding:15px 5px 0;
+}
+
+.round-sm{
+    width: 70px;
+    height: 50px;
+    padding:12px 5px 0;
+    font-size: 12px;
+    border-radius: 10px;
+}
+.round-bdy span{
+    display: inline-block;
+    /*vertical-align: -moz-middle-with-baseline;*/
+}
+
+.round-bdy-blue{
+    border-color: #0544d3;
+}
+
+.round-over{
+    position: absolute;
+    bottom: 5px;
+    left:0;
+    text-align: center;
+    width: 100%;
+}
+.round-over-down{
+    position: absolute;
+    bottom: 2px;
+    left:0;
+    text-align: center;
+    width: 100%;
+}
+
+.round-over-top{
+    position: absolute;
+    top: 5px;
+    left:0;
+    text-align: center;
+    width: 100%;
+}
+.over-mid{
+    position: absolute;
+    top: -5px;
+    right:5px;
+    text-align: right;
+    width: 20%;
+}
+.ct-grid {
+    stroke: #eee;
+    stroke-width: 1px;
+    stroke-dasharray: 2px;
+}
+
+.ct-chart-bar .ct-label, .ct-chart-line .ct-label {
+    display: block;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    /* display: -webkit-flex; */
+    /* display: flex; */
+}
+
+.over-left{
+    position: absolute;
+    top: 5px;
+    left:2px;
+    /*text-align: right;*/
+}
+
+.result-style{
+    width:100%;
+    display:block;
+    position:relative;
+    text-align:right;
+    padding-right:3px;
+}
+.low-style{
+    background-color:lightblue;
+    color:#555;
+}
+.high-style{
+    background-color:lightcoral;
+    color:white;
+}
+
+
+
+

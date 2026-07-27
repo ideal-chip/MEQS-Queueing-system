@@ -1,19 +1,35 @@
-// iDEAL-Q — admin audios page: short-beep on/off toggle
-// (add/edit/delete already work via plain links + confirm() inline in list.php)
+$("#short-beep").click(function () {
+    var curValue = $("#short-beep").val();
+    var newValue = curValue == 0 ? 'active' : 'inactive';
+    console.log("new value: " + newValue);
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: '../api/update.php',
+        data: {type: 'shortaudio', value: newValue, id:11},
+        success: function (response, textStatus, jqXHR) {
 
-$(document).ready(function () {
-    $('#short-beep').on('click', function () {
-        var $btn = $(this);
-        var newValue = $btn.val() == 1 ? 0 : 1;
-        $.get('../api/update.php?id=1&type=shortaudio&value=' + newValue, function (data) {
-            if (data !== 0 && data !== '0') {
-                $btn.val(newValue);
-                if (newValue == 1) {
-                    $btn.removeClass('btn-danger').addClass('btn-success').text(lang_active);
+            console.log(response);
+            if (response) {
+                
+                if (response == 'active') {
+                    $("#short-beep").text(lang_active);
+                    $("#short-beep").val(1);
+                    $("#short-beep").addClass("btn-success");
+                    $("#short-beep").removeClass("btn-danger");
+
                 } else {
-                    $btn.removeClass('btn-success').addClass('btn-danger').text(lang_inactive);
+                    $("#short-beep").text(lang_inactive);
+                    $("#short-beep").val(0);
+                    $("#short-beep").removeClass("btn-success");
+                    $("#short-beep").addClass("btn-danger");
                 }
             }
-        });
+
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            //alert('Error - ' + errorThrown);
+        }
     });
 });

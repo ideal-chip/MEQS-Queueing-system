@@ -1,0 +1,128 @@
+body{
+    text-align:center;
+    font-family:Arial;
+    color:white;
+    background-color:#23445B;
+    /*background-color:#23445B;*/
+}
+
+a{
+    text-decoration:none;
+}
+a:link {
+    color: white;
+}
+a:visited {
+    color: white;
+}
+a:hover {
+    color: yellow;
+}
+a:active {
+    color: white;
+}
+
+.category_item{
+    font-size: 25pt;
+    font-family: 'Tahoma';
+    background-color:gold;
+    width:600px;
+    min-height:75px;
+    /*text-shadow: 2px 2px gray;*/
+    border-radius: 20px;
+    margin:5px;
+    padding:5px;
+    cursor:pointer;
+    color: #444;
+}
+
+.category_item :active{
+    background-color:red;
+    color: white;
+}
+
+.category_home{
+    font-size: 15pt;
+    font-family: 'Tahoma';
+    background-color:silver;
+    width:200px;
+    /*    height:75px;*/
+    /*text-shadow: 2px 1px gray;*/
+    border-radius: 20px;
+    color:blue;
+}
+
+#fullscreen{
+    z-index:1;
+    width:100%;
+    height:100%;
+    top:0px;
+    left:0px;
+    display:none;
+    position:absolute;
+    background-color:black;
+    opacity:0.5;
+}
+
+#msgbox{
+    color:blue;
+    z-index:2;
+    width:552px;
+    height:450px;
+    top: 50%;
+    left: 50%;
+    margin-top:-225px;
+    margin-left:-226px;
+    display:none;
+    position:absolute;
+    background-color:white;
+    border:3px outset black;
+    font-size:14pt;
+    vertical-align:middle;
+    line-height:225px;
+}
+
+.red{
+    background-color: #c7254e;
+    color: white;
+}
+
+#footer{
+    /*    position:absolute;
+        top:100%;
+        left:50%;
+        margin-top:-30px;
+        margin-left:-250px;*/
+    margin: 20px auto;
+    width: 550px;
+}
+
+#items_table{
+    margin: 0 auto;
+    width:800px;
+    text-align:center;
+}
+
+#otherLanguage{
+    z-index:1;
+    position:absolute;
+    top:99%;
+    margin-top:-130px;
+    left:1%;
+}
+
+.ftr-logo-con{
+    margin: 0 5px;
+}
+.ftr-logo-con img{
+    width: 30px;
+    height: 30px;
+}
+
+footer .row{
+    clear: both;
+    margin: 0;
+    /*    background-color: #eee;*/
+    color:#668cff;
+    padding: 10px 0;
+}

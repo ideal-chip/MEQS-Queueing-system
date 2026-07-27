@@ -1,64 +1,59 @@
-/* iDEAL-Q Login Page Styles */
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+body { 
+    background: url("../files/bd_bg/blue.jpg") no-repeat center center fixed; 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    
+/*     background: url("../images/bd_bg/c (1).jpg") no-repeat center center fixed; 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;*/
 }
 
-.bdy-login {
-    background: white;
+.bdy-login{
+    width: 350px;
+    margin: 40px auto;
+    box-shadow: 0 0 5px 1px #0f0f0f;
+    padding:5px 3px;
     border-radius: 10px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    overflow: hidden;
-    max-width: 400px;
-    margin: 20px auto;
+    font-size: 85%;
 }
-
-.info-login {
+.info-login{
+    padding:  5px;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+/*    background-color: #888;
+    opacity: 0.8;*/
     text-align: center;
 }
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ [ Forms ]*/
 
-.logo-big {
-    padding: 30px;
-    background: white;
+.form-signin{
+    background-color: #0f0f0f;
+    padding: 20px;
+    color: white;
+    /*border: 10px solid #ddd;*/
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    box-shadow: 0 0 5px 1px #999;
+    opacity: 0.8;
 }
 
-.logo-big img {
-    max-width: 200px;
-    height: auto;
+
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ [ logo big ]*/
+.logo-big{
+    display: table;
+    margin: 1px auto 10px;
+}
+.logo-big img{
+    width: 55%;
+    height: 55%;
+
 }
 
-.form-signin {
-    padding: 30px;
-}
 
-.form-signin .form-control {
-    position: relative;
-    height: auto;
-    padding: 10px;
-    font-size: 16px;
-    margin-bottom: 10px;
-}
 
-.form-signin .btn {
-    padding: 12px 30px;
-    font-size: 16px;
-    font-weight: bold;
-}
 
-.has-error .form-control {
-    border-color: #e74c3c;
-}
-
-.help-block {
-    color: #e74c3c;
-    font-size: 12px;
-}
-
-.footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}

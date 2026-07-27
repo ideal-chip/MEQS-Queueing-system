@@ -1,102 +1,295 @@
-// iDEAL-Q — admin subcategories page (beaa/admin/subcategories.php)
-// Talks directly to ./views/subcategories/process.php (add/update/delete/report/row).
-
-var AJAX_URL = './views/subcategories/process.php';
-
 $(document).ready(function () {
-    $('#req-papers').sceditor({
-        plugins: 'xhtml',
-        style: '../js/minified/themes/default.min.css',
-        width: '100%',
-        height: 250
-    });
+    createEditor();
 });
 
-function getEditor() {
-    return $('#req-papers').sceditor('instance');
+var textarea = document.getElementById('req-papers');
+var divDel = document.getElementById('req-papers-del');
+
+function createEditor() {
+
+    sceditor.create(textarea, {
+        plugins: 'xhtml, undo, plaintext',
+        autoUpdate: true,
+        width: '100%',
+        height: '100%',
+        resizeHeight: false,
+        resizeWidth: false,
+        style: '../js/minified/themes/content/default.min.css',
+        emoticonsEnabled: false,
+        toolbarExclude: "emoticon,print,youtube"
+    });
+
+    sceditor.create(divDel, {
+        plugins: 'xhtml, undo',
+        resizeHeight: false,
+        resizeWidth: false,
+        readOnly: true,
+        toolbar: '',
+        style: '../js/minified/themes/content/default.min.css',
+        emoticonsEnabled: false,
+        toolbarExclude: "emoticon,print,youtube"
+    });
 }
 
-function showForm(mode, subID) {
-    $('#ajax-error').hide();
-    $('#ajax-error-list').empty();
-    $('#sub-modal').show();
+function destroyEditor() {
+    var instance = $('#req-papers').sceditor('instance');
+    instance.destroy();
+}
 
-    if (mode === 'add') {
-        $('#ajaxMode').val('add');
-        $('#subcategory-id').val('');
-        $('#sub-name').val('');
-        $('#sub-waittime').val('');
-        getEditor().val('');
-        $('#field-section').show();
-        $('#del-section').hide();
-        $('#btn-submit').text(text_add);
-        return;
+function showForm(mode, id = 0) {
+
+    $("#ajaxMode").val(mode);
+
+    switch (mode) {
+        case 'add':
+            emptyForm();
+
+            $("#btn-submit").text(text_add);
+            $("#del-section").hide();
+            $("#field-section").show();
+
+            break;
+        case 'update':
+
+            updateFormFields(id, mode);
+
+            $("#btn-submit").text(text_update);
+            $("#del-section").hide();
+            $("#field-section").show();
+
+            break;
+        case 'delete':
+
+            updateFormFields(id, mode);
+
+            $("#btn-submit").text(text_delete);
+            $("#del-section").show();
+            $("#field-section").hide();
+            break;
     }
 
-    // the GET branch in process.php is only reached when ajaxMode is non-empty,
-    // even though its value isn't used for a plain row fetch.
-    $.get(AJAX_URL + '?subcategory=' + subID + '&ajaxMode=row', function (data) {
-        var row = (typeof data === 'string') ? JSON.parse(data) : data;
-        if (!row) return;
+    clearTableHighlight();
+    $("#btn-add").hide();
+    $("#sub-modal").fadeIn('fast');
+}
 
-        if (mode === 'update') {
-            $('#ajaxMode').val('update');
-            $('#subcategory-id').val(row.subcategory_id);
-            $('#sub-name').val(row.subcategory_name);
-            $('#sub-waittime').val(row.wait_time_days);
-            getEditor().val(row.papers || '');
-            $('#field-section').show();
-            $('#del-section').hide();
-            $('#btn-submit').text(text_update);
-        } else if (mode === 'delete') {
-            $('#ajaxMode').val('delete');
-            $('#subcategory-id').val(row.subcategory_id);
-            $('#sub-name-del').text(row.subcategory_name);
-            $('#sub-waittime-del').text(row.wait_time_days);
-            $('#req-papers-del').html(row.papers || '');
-            $('#field-section').hide();
-            $('#del-section').show();
-            $('#btn-submit').text(text_delete);
+function clearTableHighlight() {
+    $("#sub-cat-list tr").removeClass("row-highlited");
+}
+
+function updateFormFields(id, mode) {
+
+//    console.log("update fields");
+
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: "./views/subcategories/process.php",
+        data: {subcategory: id, ajaxMode: 'get'},
+        success: function (response, textStatus, jqXHR) {
+//            console.log(response);
+            if (response) {
+
+                $('input[name=subcategory-id]').val(response.subcategory_id);
+                $('input[name=id]').val(response.main_category_id);
+
+                $("#row-" + id).addClass("row-highlited");
+
+                if (mode == 'update') {
+//                    alert("update");
+                    $('input[name=sub-name]').val(response.subcategory_name);
+                    $('input[name=sub-waittime]').val(response.wait_time_days);
+                    var instance = $('#req-papers').sceditor('instance');
+//                    instance.val("");
+                    $('#req-papers').val(response.papers);
+                    instance.val(response.papers);
+
+                } else {
+                    $("#sub-name-del").text(response.subcategory_name);
+                    $("#sub-waittime-del").text(response.wait_time_days);
+                    var instance2 = $('#req-papers-del').sceditor('instance');
+//                    instance2.val("");
+                    $("#req-papers-del").text(response.papers);
+                    instance2.val(response.papers);
+                }
+
+            } else {
+
+            }
+//            hideForm();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            alert('Error - ' + errorThrown);
+        }
+    });
+}
+
+function SendSubCategory(id) {
+    var values = $("#" + id).serialize();
+    var mode = $("#ajaxMode").val();
+
+//    console.log(mode);
+
+    $.ajax({
+        url: "./views/subcategories/process.php",
+        type: "post",
+        data: values,
+        dataType: 'json',
+        success: function (response) {
+//            console.log(response);
+            if (response) {
+                var errors = response.errors;
+                var status = response.status;
+
+                if (status) {
+                    //emptyForm();
+                    hideForm();
+                    updateRow(response.data, mode);
+//                    console.log(response.data);
+
+                } else {
+                    var errTXT = "";
+                    for (var i = 0; i < errors.length; i++) {
+                        errTXT += "<li class = 'error-item'>" + errors[i] + "</li>";
+                    }
+
+                    $("#ajax-error-list").html(errTXT);
+                    $("#ajax-error").fadeIn();
+                }
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+//            console.log(textStatus, errorThrown);
+        }
+    });
+}
+
+function updateRow(data, mode) {
+
+    var subId = parseInt(data.subcategory_id);
+    var total = parseInt($("#sub-size").text());
+
+    if (mode == 'delete') {
+
+        $("#row-" + subId).replaceWith("");
+
+        $("#sub-size").text(total - 1);
+    } else {
+
+        var row = "<tr id='row-" + subId + "' class='border-btm border-gray'>" +
+                "<td>" + data.subcategory_name + "</td>" +
+                "<td>" + data.wait_time_days + "</td>" +
+                "<td><button onclick='showForm(&#39;update&#39;," + subId + ");' type='button' class='btn btn-success btn-xs no-marg marg-h-5'>" + text_edit + "</button>" +
+                "  | <button onclick='showForm(&#39;delete&#39;," + subId + ");' type='button' class='btn btn-danger btn-xs no-marg marg-h-5'>" + text_delete + "</button></td></tr>";
+
+        if (mode == 'add') {
+
+            if (total == 0) {
+                $(".empty-invert").replaceWith("");
+            }
+
+            $("#sub-size").text(total + 1);
+            $("#sub-cat-list .table").prepend(row).fadeIn();
+
+        } else {
+            $("#row-" + subId).replaceWith(row).fadeIn();
+        }
+    }
+}
+
+function GetSubCategoryById(id) {
+
+    var result;
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: "./views/subcategories/process.php",
+        data: {subcategory: id, ajaxMode: 'get'},
+        success: function (response, textStatus, jqXHR) {
+//            console.log(response);
+            if (response) {
+
+                result = response;
+//                console.log(result);
+            } else {
+                result = 0;
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            // alert('Error - ' + errorThrown);
+        }
+    });
+
+    return result;
+}
+
+function GetLastSubCategory() {
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        url: "./views/subcategories/process.php",
+        data: {},
+        success: function (response, textStatus, jqXHR) {
+//            console.log(response);
+            if (response) {
+
+            } else {
+//                alert("error! please check connection.");
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            alert('Error - ' + errorThrown);
         }
     });
 }
 
 function hideForm() {
-    $('#sub-modal').hide();
+    $("#sub-modal").fadeOut('fast');
+    $("#btn-add").fadeIn();
+    clearTableHighlight();
+    emptyForm();
 }
 
-function SendSubCategory() {
-    var mode = $('#ajaxMode').val();
-    var payload;
+function emptyForm() {
+    $(".form-ok").val("");
+    $("#ajax-error-list").html("");
+    $("#ajax-error").hide();
+}
 
-    if (mode === 'delete') {
-        payload = {ajaxMode: 'delete', 'subcategory-id': $('#subcategory-id').val()};
-    } else {
-        getEditor().updateOriginal();
-        payload = $('#sub-cat-form').serialize();
+function FlipReport(id) {
+
+    if (!id) {
+        return;
     }
-
-    $.post(AJAX_URL, payload, function (resp) {
-        var result = (typeof resp === 'string') ? JSON.parse(resp) : resp;
-        if (result && result.status) {
-            hideForm();
-            location.reload();
-        } else {
-            var errors = (result && result.errors) ? result.errors : ['Unknown error'];
-            var $list = $('#ajax-error-list');
-            errors.forEach(function (e) {
-                $list.append($('<li>').addClass('list-group-item').text(e));
-            });
-            $('#ajax-error').show();
-        }
-    }, 'json');
-}
-
-function FlipReport(subID) {
-    $.post(AJAX_URL, {ajaxMode: 'report', subcategory: subID}, function (data) {
-        var val = parseInt(data, 10);
-        if (val === 0 || val === 1) {
-            $('#repo_' + subID).text(val === 1 ? text_yes : text_no);
+    $.ajax({
+        type: 'post',
+        dataType: 'json',
+        cache: false,
+        url: "./views/subcategories/process.php",
+        data: {subcategory: id, ajaxMode: 'report'},
+        success: function (response, textStatus, jqXHR) {
+//            console.log(response);
+            if (response >= 0) {
+                
+                flipReportBtn(id, response);
+//                console.log("id: " + id + ", active:" + response);
+            } 
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
         }
     });
+}
+
+function flipReportBtn(id, status) {
+
+    var elemante = "#repo_" + id;
+
+    if (status > 0) {
+        $(elemante).text(text_yes);
+    } else {
+        $(elemante).text(text_no);
+    }
 }
