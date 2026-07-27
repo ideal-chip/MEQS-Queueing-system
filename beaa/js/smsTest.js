@@ -21,7 +21,7 @@ function sendSMS() {
         type: 'POST',
         dataType: 'json',
         cache: false,
-        url: 'https://bulksms.arabiacell.net/index.php/api/send_sms/send',
+        url: 'https://bulk-sms.gov.jo/index.php/api/send_sms/send',//https://bulk-sms.gov.jo.  https://bulksms.arabiacell.net
         data: values,
 //        beforeSend: function (xhr) {
 //            xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
