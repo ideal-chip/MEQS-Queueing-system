@@ -142,27 +142,37 @@ function getColumn($query) {
 
 function executeQuery($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastID, $lastSQLError;
+    $result = false;
     $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         $result = $conn->query($query);
         $lastID = $conn->insert_id;
+        // A failed statement has to report why. Callers show $lastSQLError to
+        // the operator, and leaving it empty turned real failures (a foreign
+        // key violation, a value too long for its column) into a screen that
+        // just said "SQL error" and nothing else.
+        $lastSQLError = $result ? "" : $conn->error;
         $conn->close();
     } else {
-        $lastSQLError = $conn->error;
+        $lastSQLError = $conn->connect_error ? $conn->connect_error : $conn->error;
     }
     return $result;
 }
 
 function executeMultiQuery($query) {
     global $dbhost, $dbusername, $dbpassword, $dbname, $lastID, $lastSQLError;
+    $result = false;
     $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
     if (!$conn->errno) {
         $conn->set_charset("utf8");
         $result = $conn->multi_query($query);
+        // Note: multi_query() only reports the FIRST statement's outcome, so
+        // this error text covers that statement only.
+        $lastSQLError = $result ? "" : $conn->error;
         $conn->close();
     } else {
-        $lastSQLError = $conn->error;
+        $lastSQLError = $conn->connect_error ? $conn->connect_error : $conn->error;
     }
     return $result;
 }
@@ -201,6 +211,25 @@ function getArrayAssoc($query) {
         $lastSQLError = $conn->error;
     }
     return $resultArray;
+}
+
+/*
+ * Escape a value for use inside single quotes in one of the hand-built
+ * queries above. real_escape_string is charset-aware, so it has to run on a
+ * connection whose charset matches the one the query is sent on ("utf8"),
+ * otherwise multi-byte Arabic text can be mangled. Falls back to
+ * addslashes() only if the connection cannot be opened.
+ */
+function escapeString($value) {
+    global $dbhost, $dbusername, $dbpassword, $dbname;
+    $conn = new mysqli($dbhost, $dbusername, $dbpassword, $dbname, DB_PORT);
+    if (!$conn->errno) {
+        $conn->set_charset("utf8");
+        $escaped = $conn->real_escape_string((string) $value);
+        $conn->close();
+        return $escaped;
+    }
+    return addslashes((string) $value);
 }
 
 function getKeyValArray($array, $key, $value) {

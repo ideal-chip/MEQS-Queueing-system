@@ -21,7 +21,17 @@ class StarRatingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The row is sized in `.w`/`.sp`, so on an unusually narrow card (a
+    // two-up grid on a tablet, or a long question pushing the card down) five
+    // stars could add up to more than the available width and spill out.
+    // FittedBox scales the whole row down to fit instead, keeping it on one
+    // line at every screen size; it is a no-op when there is room.
+    return FittedBox(fit: BoxFit.scaleDown, child: _starsRow(context));
+  }
+
+  Widget _starsRow(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (i) {
         final starIndex = i + 1;
@@ -40,12 +50,7 @@ class StarRatingWidget extends StatelessWidget {
                 size: size.sp,
                 color: filled ? AppColors.gold : context.tones.fg3,
                 shadows: filled
-                    ? [
-                        const Shadow(
-                          color: AppColors.goldGlow,
-                          blurRadius: 16,
-                        ),
-                      ]
+                    ? [const Shadow(color: AppColors.goldGlow, blurRadius: 16)]
                     : null,
               ),
             ),

@@ -32,4 +32,10 @@ class AppDefaults {
 
   /// Dark is the default theme ('dark' | 'light').
   static const String themeMode = 'dark';
+
+  /// Per-counter ("special") feedback is switched off for now: the app opens
+  /// straight onto the general rating page and the only other destination is
+  /// Settings. The screens, controllers and repository are all still here —
+  /// flip this to `true` to bring the counter list back.
+  static const bool counterFeedbackEnabled = false;
 }

@@ -8,6 +8,7 @@ import 'package:get_storage/get_storage.dart';
 import 'app/bindings/initial_binding.dart';
 import 'app/core/localization/app_translations.dart';
 import 'app/core/theme/app_theme.dart';
+import 'app/core/utils/responsive.dart';
 import 'app/presentation/controllers/settings_controller.dart';
 import 'app/presentation/screens/splash/splash_screen.dart';
 
@@ -28,19 +29,43 @@ Future<void> main() async {
 /// sizing (phone <-> 10.95" tablet) and in an [Obx] so switching language or
 /// re-tinting the accent colour on the Settings screen updates the whole app —
 /// fonts, text direction (RTL/LTR) and theme — live, with no restart.
+///
+/// [ScreenUtilInit]'s design canvas is chosen per device class AND orientation
+/// (see [DesignCanvas]) rather than being fixed to a portrait phone, which is
+/// what made the horizontal tablet layout inconsistent. The [MediaQuery.fromView]
+/// above it exists so rotating the tablet rebuilds this widget with the new
+/// screen size and screenutil is reconfigured for the new canvas.
 class IdealFeedbackApp extends StatelessWidget {
   const IdealFeedbackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return MediaQuery.fromView(
+      view: View.of(context),
+      child: Builder(
+        builder: (context) =>
+            _ScaledApp(designSize: DesignCanvas.of(MediaQuery.sizeOf(context))),
+      ),
+    );
+  }
+}
+
+class _ScaledApp extends StatelessWidget {
+  final Size designSize;
+
+  const _ScaledApp({required this.designSize});
+
+  @override
+  Widget build(BuildContext context) {
     final settings = Get.find<SettingsController>();
     return ScreenUtilInit(
-      designSize: const Size(430, 932),
+      designSize: designSize,
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => Obx(() {
-        final code =
-            settings.languageCode.value.isEmpty ? 'ar' : settings.languageCode.value;
+        final code = settings.languageCode.value.isEmpty
+            ? 'ar'
+            : settings.languageCode.value;
         final locale = Locale(code);
         // Touch these so the app rebuilds when the accent colour or theme
         // mode changes.
@@ -61,8 +86,11 @@ class IdealFeedbackApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           theme: AppTheme.build(settings.repository, locale, Brightness.light),
-          darkTheme:
-              AppTheme.build(settings.repository, locale, Brightness.dark),
+          darkTheme: AppTheme.build(
+            settings.repository,
+            locale,
+            Brightness.dark,
+          ),
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
           home: const SplashScreen(),
         );

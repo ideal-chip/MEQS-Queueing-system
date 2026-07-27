@@ -21,11 +21,11 @@ if (count($errorList) > 0) {
     <table class="table s-70">
         <tr>
             <td><?php echo getTextValue("counterName", $lang) ?></td>
-            <td><input type='text' name='name' value='<?php echo $counterName ?>'></td>
+            <td><input type='text' name='name' maxlength='<?php echo COUNTER_NAME_MAX_LENGTH ?>' value='<?php echo htmlspecialchars($counterName, ENT_QUOTES, 'UTF-8') ?>'></td>
         </tr>
         <tr>
             <td><?php echo getTextValue("counterNo", $lang) ?></td>
-            <td><input type='text' name='no' value='<?php echo $counterNo ?>'></td>
+            <td><input type='text' name='no' value='<?php echo htmlspecialchars($counterNo, ENT_QUOTES, 'UTF-8') ?>'></td>
         </tr>
         <tr>
             <td><?php echo getTextValue("counterDisplay", $lang) ?></td>

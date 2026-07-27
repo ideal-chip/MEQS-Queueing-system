@@ -11,6 +11,10 @@ import '../../controllers/settings_controller.dart';
 /// Reconfigure the app without a rebuild: server URL, custom titles, language
 /// (Arabic/English — switching here flips the whole app, including RTL), the
 /// accent colour, and a reset. Everything is persisted and applies instantly.
+///
+/// Pushed as its own route from the gear button in the general rating page's
+/// top bar, so it carries its own background and back button rather than
+/// relying on the shell that used to host it behind the bottom nav bar.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -19,122 +23,124 @@ class SettingsScreen extends StatelessWidget {
     final settings = Get.find<SettingsController>();
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.tones.canvas,
       appBar: AppBar(title: Text('nav_settings'.tr)),
-      body: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: context.contentMaxWidth),
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 32.h),
-              children: [
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
-                    child: const BrandLogo(height: 52),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-
-                // ── Language ──────────────────────────────────────────────
-                _Section(
-                  title: 'settings_language'.tr,
-                  child: Obx(
-                    () => _LanguageToggle(
-                      current: settings.languageCode.value,
-                      onSelect: settings.setLanguage,
+      body: AnimatedBackground(
+        child: SafeArea(
+          top: false,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: context.contentMaxWidth),
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 32.h),
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      child: const BrandLogo(height: 52),
                     ),
                   ),
-                ),
+                  SizedBox(height: 12.h),
 
-                // ── Theme ─────────────────────────────────────────────────
-                _Section(
-                  title: 'settings_theme'.tr,
-                  child: Obx(
-                    () => Row(
-                      children: [
-                        Expanded(
-                          child: _ToggleButton(
-                            label: 'theme_dark'.tr,
-                            icon: Icons.dark_mode_rounded,
-                            selected: settings.isDarkMode,
-                            onTap: () => settings.setThemeMode('dark'),
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: _ToggleButton(
-                            label: 'theme_light'.tr,
-                            icon: Icons.light_mode_rounded,
-                            selected: !settings.isDarkMode,
-                            onTap: () => settings.setThemeMode('light'),
-                          ),
-                        ),
-                      ],
+                  // ── Language ──────────────────────────────────────────────
+                  _Section(
+                    title: 'settings_language'.tr,
+                    child: Obx(
+                      () => _LanguageToggle(
+                        current: settings.languageCode.value,
+                        onSelect: settings.setLanguage,
+                      ),
                     ),
                   ),
-                ),
 
-                // ── Server ────────────────────────────────────────────────
-                _Section(
-                  title: 'settings_server'.tr,
-                  child: _TextSetting(
-                    label: 'api_base_url'.tr,
-                    hint: 'http://192.168.1.41:8000/beaa/api/v1',
-                    initial: settings.apiBaseUrl.value,
-                    onSaved: settings.updateApiBaseUrl,
-                  ),
-                ),
-
-                // ── Titles ────────────────────────────────────────────────
-                _Section(
-                  title: 'settings_titles'.tr,
-                  child: Column(
-                    children: [
-                      _TextSetting(
-                        label: 'general_title_label'.tr,
-                        initial: settings.generalFeedbackTitle.value,
-                        onSaved: settings.updateGeneralFeedbackTitle,
+                  // ── Theme ─────────────────────────────────────────────────
+                  _Section(
+                    title: 'settings_theme'.tr,
+                    child: Obx(
+                      () => Row(
+                        children: [
+                          Expanded(
+                            child: _ToggleButton(
+                              label: 'theme_dark'.tr,
+                              icon: Icons.dark_mode_rounded,
+                              selected: settings.isDarkMode,
+                              onTap: () => settings.setThemeMode('dark'),
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: _ToggleButton(
+                              label: 'theme_light'.tr,
+                              icon: Icons.light_mode_rounded,
+                              selected: !settings.isDarkMode,
+                              onTap: () => settings.setThemeMode('light'),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 12.h),
-                      _TextSetting(
-                        label: 'counter_title_label'.tr,
-                        initial: settings.counterFeedbackTitle.value,
-                        onSaved: settings.updateCounterFeedbackTitle,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
 
-                // ── Accent colour ─────────────────────────────────────────
-                _Section(
-                  title: 'settings_appearance'.tr,
-                  child: Obx(
-                    () => Column(
+                  // ── Server ────────────────────────────────────────────────
+                  _Section(
+                    title: 'settings_server'.tr,
+                    child: _TextSetting(
+                      label: 'api_base_url'.tr,
+                      hint: 'http://192.168.1.41:8000/beaa/api/v1',
+                      initial: settings.apiBaseUrl.value,
+                      onSaved: settings.updateApiBaseUrl,
+                    ),
+                  ),
+
+                  // ── Titles ────────────────────────────────────────────────
+                  _Section(
+                    title: 'settings_titles'.tr,
+                    child: Column(
                       children: [
-                        _ColorSetting(
-                          color: settings.primaryColor.value,
-                          onChanged: settings.updatePrimaryColor,
+                        _TextSetting(
+                          label: 'general_title_label'.tr,
+                          initial: settings.generalFeedbackTitle.value,
+                          onSaved: settings.updateGeneralFeedbackTitle,
                         ),
                         SizedBox(height: 12.h),
-                        _ColorSetting(
-                          color: settings.accentColor.value,
-                          onChanged: settings.updateAccentColor,
+                        _TextSetting(
+                          label: 'counter_title_label'.tr,
+                          initial: settings.counterFeedbackTitle.value,
+                          onSaved: settings.updateCounterFeedbackTitle,
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                SizedBox(height: 20.h),
-                GlowButton(
-                  label: 'reset_defaults'.tr,
-                  icon: Icons.restart_alt_rounded,
-                  color: AppColors.textMuted,
-                  onTap: () => _confirmReset(context, settings),
-                ),
-              ],
+                  // ── Accent colour ─────────────────────────────────────────
+                  _Section(
+                    title: 'settings_appearance'.tr,
+                    child: Obx(
+                      () => Column(
+                        children: [
+                          _ColorSetting(
+                            color: settings.primaryColor.value,
+                            onChanged: settings.updatePrimaryColor,
+                          ),
+                          SizedBox(height: 12.h),
+                          _ColorSetting(
+                            color: settings.accentColor.value,
+                            onChanged: settings.updateAccentColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+                  GlowButton(
+                    label: 'reset_defaults'.tr,
+                    icon: Icons.restart_alt_rounded,
+                    color: AppColors.textMuted,
+                    onTap: () => _confirmReset(context, settings),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -154,8 +160,11 @@ class SettingsScreen extends StatelessWidget {
             onPressed: () {
               settings.resetToDefaults();
               Get.back();
-              Get.snackbar('saved'.tr, 'reset_done'.tr,
-                  snackPosition: SnackPosition.BOTTOM);
+              Get.snackbar(
+                'saved'.tr,
+                'reset_done'.tr,
+                snackPosition: SnackPosition.BOTTOM,
+              );
             },
             child: Text('reset_defaults'.tr),
           ),
@@ -253,22 +262,30 @@ class _ToggleButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.r),
           gradient: selected
-              ? const LinearGradient(colors: [AppColors.blue, AppColors.blueDark])
+              ? const LinearGradient(
+                  colors: [AppColors.blue, AppColors.blueDark],
+                )
               : null,
           color: selected ? null : tones.field,
-          border: Border.all(
-            color: selected ? AppColors.blue : tones.line,
-          ),
+          border: Border.all(color: selected ? AppColors.blue : tones.line),
           boxShadow: selected
-              ? [BoxShadow(color: AppColors.blue.withValues(alpha: 0.4), blurRadius: 12)]
+              ? [
+                  BoxShadow(
+                    color: AppColors.blue.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                  ),
+                ]
               : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon,
-                  size: 18.sp, color: selected ? Colors.white : unselectedFg),
+              Icon(
+                icon,
+                size: 18.sp,
+                color: selected ? Colors.white : unselectedFg,
+              ),
               SizedBox(width: 8.w),
             ],
             Text(
@@ -304,8 +321,9 @@ class _TextSetting extends StatefulWidget {
 }
 
 class _TextSettingState extends State<_TextSetting> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.initial);
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initial,
+  );
 
   @override
   void dispose() {

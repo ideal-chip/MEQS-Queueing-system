@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 
+import '../core/constants/app_defaults.dart';
 import '../data/providers/api_provider.dart';
 import '../data/repositories/counters_repository.dart';
 import '../data/repositories/feedback_repository.dart';
 import '../data/repositories/settings_repository.dart';
 import '../presentation/controllers/counters_list_controller.dart';
 import '../presentation/controllers/general_feedback_controller.dart';
-import '../presentation/controllers/nav_controller.dart';
 import '../presentation/controllers/settings_controller.dart';
 
 /// Wires the whole dependency graph once at app start: data layer
@@ -28,11 +28,12 @@ class InitialBinding extends Bindings {
     Get.put(CountersRepository(api: Get.find<ApiProvider>()), permanent: true);
 
     // -- app-wide controllers --
-    Get.put(SettingsController(repository: Get.find<SettingsRepository>()), permanent: true);
-    Get.put(NavController(), permanent: true);
+    Get.put(
+      SettingsController(repository: Get.find<SettingsRepository>()),
+      permanent: true,
+    );
 
-    // -- per-tab controllers (General + Counters list are always alive
-    //    behind the bottom nav's IndexedStack, so they're permanent too) --
+    // -- home screen --
     Get.put(
       GeneralFeedbackController(
         repository: Get.find<FeedbackRepository>(),
@@ -40,9 +41,15 @@ class InitialBinding extends Bindings {
       ),
       permanent: true,
     );
-    Get.put(
-      CountersListController(repository: Get.find<CountersRepository>()),
-      permanent: true,
-    );
+
+    // Per-counter feedback is off (AppDefaults.counterFeedbackEnabled), so its
+    // controller is not created and the app makes no counters request at
+    // startup. Kept wired up behind the flag so re-enabling is a one-line change.
+    if (AppDefaults.counterFeedbackEnabled) {
+      Get.put(
+        CountersListController(repository: Get.find<CountersRepository>()),
+        permanent: true,
+      );
+    }
   }
 }
