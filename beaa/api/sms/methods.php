@@ -6,70 +6,176 @@ date_default_timezone_set("Asia/Amman");
 $hourStart = 8;
 $hourEnd = 17;
 
-// Gateway moved to the national bulk-SMS domain. The previous host
-// (https://185.109.192.36) still answers on "/" but its API path now returns
-// 404, which is why sending stopped working. Path and payload are unchanged.
-$sendURL = "https://bulk-sms.gov.jo/index.php/api/send_sms/send";
+// The gateway moved from ArabiaCell to the national A2A Messaging Platform
+// (bulk-sms.gov.jo). That is not just a new address -- it is a different
+// protocol. The old one was a single POST with HTTP Basic auth and form
+// fields; A2A is two steps:
+//
+//   1. POST {host}/authenticate         {"username":..,"password":..}
+//      -> {"token":"Bearer eyJ..."}     (valid for ONE MINUTE only)
+//   2. POST {host}/sendSmsNotifications  Authorization: <that token>
+//      -> {"<code>":"mobile number[9627...] messagesId[55886834]"}
+//
+// Both are application/json. The old ArabiaCell endpoint is dead (404 on its
+// API path), so the old flow could never have been made to work by changing
+// the URL alone.
+$smsHost = "https://bulk-sms.gov.jo";
+$authURL = $smsHost . "/authenticate";
+$sendURL = $smsHost . "/sendSmsNotifications";
+
+// A2A requires the international format (962XXXXXXXXX). The followups table
+// holds locally-typed numbers ("0796188021"), and a few malformed ones.
+$smsMessageTypeId = 3;
 
 //==================================================================|| Functions Requests
 
-function sendCurl($post, $smsSetting) {
+/**
+ * Normalise a Jordanian mobile number to the international MSISDN format
+ * A2A expects (962 7X XXX XXXX). Returns '' when the number cannot be
+ * salvaged, so the caller can skip it instead of sending it into the void.
+ */
+function normalizeMsisdn($raw) {
+    $digits = preg_replace('/\D+/', '', (string) $raw);
 
-    global $sendURL;
-    $user = $smsSetting['sms_username'];
-    $password = $smsSetting['sms_password'];
+    if (strpos($digits, '00962') === 0) {
+        $digits = substr($digits, 2);
+    }
+    if (strpos($digits, '962') === 0) {
+        $local = substr($digits, 3);
+    } elseif (strpos($digits, '0') === 0) {
+        $local = substr($digits, 1);
+    } else {
+        $local = $digits;
+    }
 
-    $fields = (is_array($post)) ? http_build_query($post) : $post;
+    // Jordanian mobiles are 9 digits after the country code and start with 7.
+    if (strlen($local) !== 9 || $local[0] !== '7') {
+        return '';
+    }
+    return '962' . $local;
+}
 
-    $header = array(
-        'Content-Type: application/x-www-form-urlencoded',
-        'Authorization: Basic ' . base64_encode("$user:$password")
-    );
+/**
+ * Step 1: exchange the stored username/password for a bearer token.
+ * The token lives for one minute, so it is cached only for the duration of a
+ * single cron run and re-fetched once it is close to expiring.
+ */
+function a2aToken($smsSetting, $force = false) {
+    global $authURL;
+    static $cached = '';
+    static $fetchedAt = 0;
+
+    // Re-authenticate with 15s of headroom before the 60s expiry.
+    if (!$force && $cached !== '' && (time() - $fetchedAt) < 45) {
+        return $cached;
+    }
+
+    $body = json_encode(array(
+        'username' => $smsSetting['sms_username'],
+        'password' => $smsSetting['sms_password'],
+    ));
 
     $ch = curl_init();
-
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-
-    curl_setopt($ch, CURLOPT_URL, $sendURL);
+    curl_setopt($ch, CURLOPT_URL, $authURL);
     curl_setopt($ch, CURLOPT_POST, TRUE);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Accept: application/json',
+    ));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $out = curl_exec($ch);
+    if ($out === false) {
+        print_r('Curl error (authenticate): ' . curl_error($ch) . "<br>");
+    }
+    curl_close($ch);
 
-    // for debugging...
-    //  curl_setopt($ch, CURLOPT_HEADER, true);
-    //  curl_setopt($ch, CURLOPT_PROXY, '127.0.0.1:8888');
+    $json = json_decode($out, true);
+    if (!is_array($json) || empty($json['token'])) {
+        // Surface the gateway's own wording (e.g. "Invalid Credentials").
+        print_r('SMS auth failed: ' . trim((string) $out) . "<br>");
+        $cached = '';
+        return '';
+    }
+
+    $cached = $json['token'];
+    $fetchedAt = time();
+    return $cached;
+}
+
+/**
+ * Step 2: send one message. Keeps the original name/signature so index.php
+ * and SendSMS() are unchanged.
+ */
+function sendCurl($post, $smsSetting) {
+
+    global $sendURL, $smsMessageTypeId;
+
+    $msisdn = normalizeMsisdn($post['mobile_number']);
+    if ($msisdn === '') {
+        return json_encode(array('error' => 'invalid mobile number [' . $post['mobile_number'] . ']'));
+    }
+
+    $token = a2aToken($smsSetting);
+    if ($token === '') {
+        return json_encode(array('error' => 'authentication failed'));
+    }
+
+    $payload = json_encode(array(
+        'data1' => array(
+            'msisdn'        => $msisdn,
+            'text'          => $post['msg'],
+            'header'        => (string) $post['from'],
+            'messageTypeId' => $smsMessageTypeId,
+        ),
+    ), JSON_UNESCAPED_UNICODE);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $sendURL);
+    curl_setopt($ch, CURLOPT_POST, TRUE);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Accept: application/json',
+        'Authorization: ' . $token,
+    ));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
     $output = curl_exec($ch);
 
     if ($output === false) {
-        // throw new Exception('Curl error: ' . curl_error($crl));
-        print_r('Curl error: ' . curl_error($ch));
+        print_r('Curl error: ' . curl_error($ch) . "<br>");
     }
     curl_close($ch);
 
-    //var_dump($output);
     return $output;
 }
 
 //==================================================================|| Functions Messages
+/**
+ * A2A answers with a single {"<status code>": "<descriptive result>"} pair.
+ * A delivered message carries a message id, e.g.
+ *   {"s001":"mobile number[962798495860] messagesId[55886834]"}
+ * whereas every failure path (bad credentials, bad number, quota) returns a
+ * descriptive string with no messagesId. Treating "has a messagesId" as the
+ * success signal therefore works without hard-coding the status codes -- and
+ * it is what stops a failed send from being marked as sent in followups.
+ */
 function checkResponse($response) {
-    $json = json_decode($response, true);
-
-    $status = $json['status'];
-    $message = $json['message'];
-
-    $res1 = strpos($message, 'I01-Job');
-    $res2 = strpos($message, 'I02-Job');
-
-    if ($status == 201 && ($res1 !== false || $res2 !== false)) {
-        return true;
+    if (!is_string($response) || $response === '') {
+        return false;
     }
 
-    return false;
+    $json = json_decode($response, true);
+    $text = is_array($json) ? implode(' ', array_map('strval', $json)) : $response;
+
+    return stripos($text, 'messagesId[') !== false;
 }
 
 function createMsg($serialNo) {
