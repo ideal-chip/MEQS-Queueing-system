@@ -10,6 +10,7 @@ function GetCards() {
             WHERE 
             date_done IS NOT NULL 
             AND date_sms_sent IS NULL
+            AND date_done >= CURDATE()
             GROUP BY mobile_number
             ORDER BY date_done
             LIMIT 20;";

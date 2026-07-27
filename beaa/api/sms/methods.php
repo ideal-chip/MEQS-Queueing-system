@@ -22,12 +22,35 @@ $hourEnd = 17;
 $smsHost = "https://bulk-sms.gov.jo";
 $authURL = $smsHost . "/authenticate";
 $sendURL = $smsHost . "/sendSmsNotifications";
+$smsLogFile = "/var/log/idealq-sms.log";
 
 // A2A requires the international format (962XXXXXXXXX). The followups table
 // holds locally-typed numbers ("0796188021"), and a few malformed ones.
 $smsMessageTypeId = 3;
 
 //==================================================================|| Functions Requests
+
+/**
+ * Write a small, credential-free audit trail for production diagnosis.
+ */
+function smsLog($event, $context = array()) {
+    global $smsLogFile;
+
+    foreach (array('password', 'token', 'authorization') as $secret) {
+        unset($context[$secret]);
+    }
+
+    $entry = array(
+        'timestamp' => date('c'),
+        'event' => $event,
+        'context' => $context,
+    );
+    @file_put_contents(
+        $smsLogFile,
+        json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+        FILE_APPEND | LOCK_EX
+    );
+}
 
 /**
  * Normalise a Jordanian mobile number to the international MSISDN format
@@ -89,12 +112,18 @@ function a2aToken($smsSetting, $force = false) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $out = curl_exec($ch);
     if ($out === false) {
+        smsLog('authentication_curl_error', array('error' => curl_error($ch)));
         print_r('Curl error (authenticate): ' . curl_error($ch) . "<br>");
     }
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     $json = json_decode($out, true);
     if (!is_array($json) || empty($json['token'])) {
+        smsLog('authentication_failed', array(
+            'http_code' => $httpCode,
+            'response' => trim((string) $out),
+        ));
         // Surface the gateway's own wording (e.g. "Invalid Credentials").
         print_r('SMS auth failed: ' . trim((string) $out) . "<br>");
         $cached = '';
@@ -103,6 +132,7 @@ function a2aToken($smsSetting, $force = false) {
 
     $cached = $json['token'];
     $fetchedAt = time();
+    smsLog('authentication_succeeded', array('http_code' => $httpCode));
     return $cached;
 }
 
@@ -116,6 +146,9 @@ function sendCurl($post, $smsSetting) {
 
     $msisdn = normalizeMsisdn($post['mobile_number']);
     if ($msisdn === '') {
+        smsLog('invalid_mobile_number', array(
+            'mobile_number' => (string) $post['mobile_number'],
+        ));
         return json_encode(array('error' => 'invalid mobile number [' . $post['mobile_number'] . ']'));
     }
 
@@ -150,9 +183,21 @@ function sendCurl($post, $smsSetting) {
     $output = curl_exec($ch);
 
     if ($output === false) {
+        smsLog('send_curl_error', array(
+            'msisdn' => $msisdn,
+            'error' => curl_error($ch),
+        ));
         print_r('Curl error: ' . curl_error($ch) . "<br>");
     }
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+
+    smsLog('send_response', array(
+        'msisdn' => $msisdn,
+        'http_code' => $httpCode,
+        'accepted' => checkResponse($output),
+        'response' => trim((string) $output),
+    ));
 
     return $output;
 }
